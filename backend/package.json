@@ -1,0 +1,29 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "concurrently \"npx esbuild index.ts --bundle --platform=node --target=node14 --outfile=dist/index.js --watch\" \"nodemon dist/index.js\"",
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.147",
+    "@types/express": "^5.0.0",
+    "concurrently": "^9.1.2",
+    "esbuild": "^0.25.0",
+    "nodemon": "^3.1.9",
+    "typescript": "~5.6.2"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "aws-lambda": "^1.0.7",
+    "aws-serverless-express": "^3.4.0",
+    "axios": "^1.8.1",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "node-gost": "^1.0.2"
+  }
+}

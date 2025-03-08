@@ -1,0 +1,59 @@
+@import "./animations";
+@import "./button";
+@import "./landing";
+@import "./navbar";
+@import "./card";
+@import "./progres-bar";
+@import "./inputs";
+@import "./typography";
+@import "./markdown";
+
+:root {
+  --primary-bg-color: black;
+  --accent-color: #F2613F;
+  --primary-text-color: white;
+  --font-family: "Roboto", sans-serif;
+}
+
+html[data-theme="dark"] {
+  --primary-bg-color: black;
+  --accent-color: #DC5F00;
+  --primary-text-color: rgb(204, 204, 204);
+  --muted-text-color: rgb(119, 119, 119);
+}
+
+html[data-theme="light"] {
+  --primary-bg-color: #EEEEEE;
+  --accent-color: #DC5F00;
+  --primary-text-color: #373A40;
+  --muted-text-color: #686D76;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+html {
+  block-size: 100%;
+  color-scheme: light;
+
+  &[data-theme="dark"] {
+    color-scheme: dark;
+
+    @supports not (color-scheme: dark) {
+      background: var(--primary-bg-color);
+    }
+  }
+}
+
+body {
+  min-block-size: 100%;
+  font-family: system-ui, sans-serif;
+
+  margin: 0;
+  padding: 0;
+  background-color: var(--primary-bg-color);
+  color: var(--primary-text-color);
+  font-family: var(--font-family);
+}

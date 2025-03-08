@@ -1,0 +1,16 @@
+.sign-in {
+    width: 100%;
+
+    &__container {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    &__actions {
+        margin-top: 0.6rem;
+        display: flex;
+        flex-direction: row;justify-content: end;
+    }
+}

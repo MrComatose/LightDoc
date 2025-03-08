@@ -1,0 +1,20 @@
+$progress-bar-height: 5px;
+$progress-bar-background: var(--primary-bg-color);
+$progress-bar-fill-background: var(--accent-color);
+$progress-bar-border-radius: 0;
+
+.progress-bar {
+  width: 100%;
+  background-color: $progress-bar-background;
+  border-radius: $progress-bar-border-radius;
+  height: $progress-bar-height;
+  overflow: hidden;
+  display: flex;
+  
+  &__fill {
+    height: 100%;
+    background-color: $progress-bar-fill-background;
+    width: 0; // Initial width can be set dynamically via inline style or JS
+    transition: width 0.3s ease;
+  }
+}

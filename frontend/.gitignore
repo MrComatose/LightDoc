@@ -1,0 +1,171 @@
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output directories
+dist/
+build/
+out/
+
+# Optional eslint cache
+.eslintcache
+
+# IDE specific files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Build files
+*.out
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Dependency directories
+bower_components/
+build/
+
+# TypeScript
+*.tsbuildinfo
+
+# JetBrains Rider
+.idea/
+.idea_modules/
+
+# macOS specific
+.DS_Store
+
+# Windows specific
+Thumbs.db
+desktop.ini
+
+# Exclude all hidden files except for .gitignore
+.*
+!.gitignore
+
+# JavaScript
+node_modules/
+*.log
+
+# Production
+build
+dist
+
+# Misc
+.DS_Store
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# C#
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files (MonoDevelop/Xamarin Studio)
+*.userprefs
+
+# Mono auto generated files
+mono_crash.*
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# VS Code directories
+.vscode/
+
+# Local history for JetBrains IDEs
+.idea/
+
+# Rider
+.idea/
+.idea_modules/
+
+# Rider patch files
+*.patch
+
+# Microsoft Visual Studio temporary files
+*.tmp
+*.tlog
+*.log
+
+# Microsoft Visual Studio build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+[Ll]ogfile.*
+
+# VS Code snippets
+.vscode/*.code-snippets
+
+# Node modules and debug logs
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Generated JavaScript files
+*.js
+*.js.map
+
+# TypeScript cache
+*.tsbuildinfo

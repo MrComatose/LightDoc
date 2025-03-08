@@ -1,0 +1,58 @@
+$font-size-base: 16px;
+$line-height-base: 1.5;
+$color-text: var(--primary-text-color);
+$color-muted: var(--muted-text-color);
+
+@mixin responsive-font-size($size, $line-height) {
+    font-size: $size;
+    line-height: $line-height;
+
+    @media (max-width: 768px) {
+        font-size: $size * 0.9;
+    }
+
+    @media (max-width: 480px) {
+        font-size: $size * 0.8;
+    }
+}
+
+// Base styles
+body {
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+}
+
+// Paragraph styles
+p {
+    margin-bottom: 1em;
+    white-space: break-spaces;
+
+    &.muted {
+        color: $color-muted;
+    }
+
+    &.lead {
+        font-size: $font-size-base * 1.2;
+        line-height: $line-height-base * 1.2;
+        font-weight: bold;
+    }
+
+    &.small {
+        font-size: $font-size-base * 0.85;
+    }
+
+    &.highlight {
+        background-color: #ffff99;
+    }
+}
+
+// Span styles
+span {
+    &.muted {
+        color: $color-muted;
+    }
+
+    &.highlight {
+        background-color: #ffff99;
+    }
+}

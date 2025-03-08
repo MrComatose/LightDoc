@@ -1,0 +1,23 @@
+# Use the official Node.js 16 image as a parent image
+FROM node:20
+
+# Set the working directory
+WORKDIR /usr/src/app
+
+# Copy package.json and package-lock.json (or yarn.lock) into the working directory
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Bundle app source by copying it into the working directory
+COPY . .
+
+# Build the application using the script from package.json
+RUN npm run build
+
+# Expose the port that webpack-dev-server uses by default
+EXPOSE 5555
+
+# Command to run the app
+CMD ["npm", "start"]
