@@ -8,6 +8,7 @@ import './documents.scss';
 import { fileInput } from "../components/file-input";
 import { UserDocument } from "../../../shared/models";
 import { documentsLayout } from "../layout/documents.layout";
+import { documentsPanel } from "../sections";
 
 const loading = bind<boolean>(true);
 const loader = loading.asObservable().pipe(map(x => x ? progressBar : ""));
@@ -62,53 +63,17 @@ const documentsColumns = bind<TableColumn<UserDocument>[]>([
 ]);
 
 const file = bind<File | undefined>(undefined);
+const selectedDocumentId = bind<string | undefined>(undefined);
+const selectedDocument = selectedDocumentId.map(id => documents.value.find(x => x.id === id), (state, selected) => selected?.id);
 
 export const documentsPage = documentsLayout(
-    table({
-        data$: documents.asObservable(),
-        columns$: documentsColumns.asObservable(),
-        idGetter: row => row.id
+    documentsPanel({
+        documents,
+        selectedDocument
     }),
     fileInput('Додайте файл', file),
     "Test"
 ).afterViewInit(c => {
-    loadAlldocs();
-    effect(() => {
-        if (!file.value) {
-            return;
-        }
-
-        loading.value = true;
-        uploadDocument(file.value)
-            .pipe(
-                finalize(() => {
-                    loading.value = false;
-                }),
-                switchMap(fileId => getDocumentById(fileId))
-            )
-            .subscribe(newDoc => {
-                file.value = undefined;
-
-                documents.value = [...documents.value, newDoc]
-            });
-    });
-});
-
-
-
-export const documentsPage2 = component.html`
-    <div class="documents-page"> 
-        ${observe(loader)}
-        
-        <div class="documents-page__container"> 
-            ${fileInput('Додайте файл', file)}
-            ${table({
-    data$: documents.asObservable(),
-    columns$: documentsColumns.asObservable(),
-    idGetter: row => row.id
-})}
-        </div>  
-    </div>`.afterViewInit(c => {
     loadAlldocs();
     effect(() => {
         if (!file.value) {

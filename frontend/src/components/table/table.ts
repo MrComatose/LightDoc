@@ -2,8 +2,6 @@ import { map, Observable } from "rxjs";
 import { component, html, loop, Rune } from "../../core";
 import { tableRow } from "./table-row";
 
-import "./table.scss"
-
 export interface TableColumn<TData> {
     label: string;
     value: (value: TData) => Rune;
@@ -23,5 +21,5 @@ export const table = <TData>(props: TableProps<TData>) => component(() => {
     return html`<thead>${loop(labels, { name: "tr" })}</thead> ${loop(rows, { name: "tbody" })}`;
 }, {
     name: 'table',
-    class: "table"
+    class: "table is-striped is-hoverable is-fullwidth"
 });
