@@ -1,12 +1,14 @@
-@import "./animations";
-@import "./button";
-@import "./landing";
-@import "./navbar";
-@import "./card";
-@import "./progres-bar";
-@import "./inputs";
-@import "./typography";
-@import "./markdown";
+
+@use './bulma' as *; // Correctly importing all the necessary SCSS
+@use './animations' as animations;
+@use './button' as button;
+@use './landing' as landing;
+@use './navbar' as navbar;
+@use './card' as card;
+@use './progress-bar' as progress-bar;
+@use './inputs' as inputs;
+@use './typography' as typography;
+@use './markdown' as markdown;
 
 :root {
   --primary-bg-color: black;

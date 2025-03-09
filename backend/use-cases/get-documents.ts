@@ -2,25 +2,27 @@ import { S3Client } from "@aws-sdk/client-s3";
 import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { getConfig } from "../config";
+import { UserDocument } from "../../shared/models";
 
 const s3 = new S3Client({});
 const dynamoDb = new DynamoDBClient({});
 
-const BUCKET_NAME = process.env["bucketName"]!;
-const TABLE_NAME = process.env["tableName"]!;
+export const getDocuments = async (user: string): Promise<UserDocument[]> => {
+    const { TABLE_NAME, BUCKET_NAME } = getConfig();
 
-export const getDocuments = async (user: string) => {
     const queryParams = {
         TableName: TABLE_NAME,
-        KeyConditionExpression: "#user = :user", // Use ExpressionAttributeNames to avoid reserved keyword
+        KeyConditionExpression: "#user = :user AND begins_with(#id, :prefix)",
         ExpressionAttributeNames: {
-            "#user": "user" // Map "#user" to "user" to avoid the reserved keyword issue
+            "#user": "user",
+            "#id": "id"
         },
         ExpressionAttributeValues: {
-            ":user": { S: user }
+            ":user": { S: user },
+            ":prefix": { S: "document-" }
         }
     };
-
     const queryResult = await dynamoDb.send(new QueryCommand(queryParams));
     const documents = queryResult.Items || [];
 
@@ -35,11 +37,11 @@ export const getDocuments = async (user: string) => {
         const presignedUrl = await getSignedUrl(s3, downloadCommand, { expiresIn: 3600 * 10 }); // 10 hour expiration
 
         return {
-            fileId: doc.id.S,
-            s3Key: s3Key,
-            date: doc.date.S,
-            email: doc.email.S,
-            filename: doc.filename.S,
+            id: doc.id.S ?? "",
+            date: doc.date.S ?? "",
+            email: doc.email.S ?? "",
+            name: doc.name.S ?? "",
+            status: doc.status.S ?? "",
             presignedUrl
         };
     }));

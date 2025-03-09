@@ -11,12 +11,13 @@ export interface TableColumn<TData> {
 export interface TableProps<TData> {
     data$: Observable<TData[]>;
     columns$: Observable<TableColumn<TData>[]>;
+    idGetter: (d: TData) => string;
 };
 export const table = <TData>(props: TableProps<TData>) => component(() => {
     const labels = props.columns$.pipe(map(x => x.map(c => component(() => c.label, { name: 'th' }))));
 
     const rows = props.data$.pipe(
-        map((rows) => rows.map(row => tableRow({ data: row, columns$: props.columns$ })))
+        map((rows) => rows.map(row => tableRow({ data: row, columns$: props.columns$, id: props.idGetter(row) })))
     );
 
     return html`<thead>${loop(labels, { name: "tr" })}</thead> ${loop(rows, { name: "tbody" })}`;

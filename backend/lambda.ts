@@ -5,6 +5,8 @@ import { saveDocument } from "./use-cases/save-document";
 import jwt from "jsonwebtoken";
 import { getDocuments } from "./use-cases/get-documents";
 import cors from "cors";  // Import cors
+import { getDocumentById } from "./use-cases/get-document-by-id";
+import { deleteDocument } from "./use-cases/delete-document";
 
 export const app = express();
 
@@ -44,6 +46,59 @@ app.get("/api/documents", async (req: Request, res: Response): Promise<any> => {
         return res.status(500).json({ error: "Internal server error" });
     }
 });
+
+app.get("/api/documents/:fileId", async (req: Request, res: Response): Promise<any> => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        const token = authHeader.split(" ")[1];
+
+        const decoded = jwt.decode(token) as { sub?: string };
+
+        if (!decoded || !decoded.sub) {
+            return res.status(401).json({ error: "Invalid token" });
+        }
+
+        const fileId = req.params.fileId;
+
+        const result = await getDocumentById(decoded.sub, fileId);
+
+        return res.json(result);
+    } catch (error) {
+        console.error("Error fetching document:", error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+app.delete("/api/documents/:fileId", async (req: Request, res: Response): Promise<any> => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        const token = authHeader.split(" ")[1];
+
+        const decoded = jwt.decode(token) as { sub?: string };
+
+        if (!decoded || !decoded.sub) {
+            return res.status(401).json({ error: "Invalid token" });
+        }
+
+        const fileId = req.params.fileId;
+
+        await deleteDocument(decoded.sub, fileId);
+
+        return res.status(204).json({});
+    } catch (error) {
+        console.error("Error fetching document:", error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
 app.post("/api/documents", async (req: Request, res: Response): Promise<any> => {
     try {
         const authHeader = req.headers.authorization;

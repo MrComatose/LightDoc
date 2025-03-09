@@ -32,6 +32,19 @@ export class InfraStack extends cdk.Stack {
     const filesBucket = new s3.Bucket(this, 'FilesBucket', {
       bucketName: `${this.projectName.toLowerCase()}-files-453543543`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      cors: [
+        {
+          allowedOrigins: ['*'], // You can replace '*' with specific domains
+          allowedMethods: [
+            s3.HttpMethods.GET,
+            s3.HttpMethods.PUT,
+            s3.HttpMethods.POST,
+            s3.HttpMethods.HEAD,
+            s3.HttpMethods.DELETE,
+          ], // Allow all methods
+          allowedHeaders: ['*'],
+        },
+      ],
     });
 
     // DynamoDB Table

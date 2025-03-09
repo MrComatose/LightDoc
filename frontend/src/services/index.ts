@@ -1,2 +1,3 @@
-export * from './weather.service';
 export * from './documents.service'
+export * from './user.service'
+export * from './config.service';

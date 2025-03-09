@@ -2,28 +2,28 @@ import { S3Client } from "@aws-sdk/client-s3";
 import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import { uuidv7 } from "uuidv7";
+import { getConfig } from "../config";
+import { CreateDocumentResponse } from "../../shared/models";
 
 const s3 = new S3Client({});
 const dynamoDb = new DynamoDBClient({});
 
-const BUCKET_NAME = process.env["bucketName"]!;
-const TABLE_NAME = process.env["tableName"]!;
-
-export const saveDocument = async (filename: string, user: string, email?: string) => {
-    const fileId = uuidv7();
-    const s3Key = `uploads/${user}/${fileId}/${filename}`;
+export const saveDocument = async (filename: string, user: string, email?: string): Promise<CreateDocumentResponse> => {
+    const { TABLE_NAME, BUCKET_NAME } = getConfig();
+    const id = `document-${uuidv7()}`;
+    const s3Key = `uploads/${user}/${id}/${filename}`;
     const createdAt = new Date().toISOString();
 
     const { url, fields } = await createPresignedPost(s3, {
         Bucket: BUCKET_NAME,
         Key: s3Key,
-        Expires: 3600, // 1 hour
+        Expires: 3600,
     });
 
     const putItemParams = {
         TableName: TABLE_NAME,
         Item: {
-            id: { S: fileId },
+            id: { S: id },
             user: { S: user },
             email: { S: email ?? "" },
             name: { S: filename },
@@ -37,5 +37,5 @@ export const saveDocument = async (filename: string, user: string, email?: strin
 
     await dynamoDb.send(new PutItemCommand(putItemParams));
 
-    return { fileId, presignedUrl: { url, fields } };
+    return { id, presignedUrl: { url, fields } };
 };

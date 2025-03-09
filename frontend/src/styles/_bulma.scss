@@ -1,0 +1,11 @@
+// Import the necessary Bulma parts, if you want full Bulma
+@use 'bulma/sass/utilities/initial-variables' as *;
+@use 'bulma/sass/base' as *;
+@use 'bulma/sass/elements' as *;
+@use 'bulma/sass/grid' as *;
+@use 'bulma/sass/form' as *;
+@use 'bulma/sass/components' as *;
+@use 'bulma/sass/layout' as *;
+
+// If you need only specific modules, make sure to import them correctly
+// @use 'bulma/sass/components/button' as button;

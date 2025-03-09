@@ -1,7 +1,7 @@
 import { formControl } from "./components";
-import { bind, component } from "./core";
-import { routeOutlet, RouteConfig } from "./router";
-import { load, loadHtml } from "./util";
+import { bind } from "./core";
+import { RouteConfig, routeOutlet } from "./router";
+import { load } from "./util";
 
 const childDocumentsRoutes: RouteConfig[] = [
     {

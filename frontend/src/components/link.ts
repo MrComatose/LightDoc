@@ -5,7 +5,8 @@ import { router } from "../router";
 
 export interface LinkProps {
     path: string,
-    label: Rune
+    label: Rune,
+    native?: boolean;
 }
 
 export const link = (props: LinkProps, onClick?: () => void) =>
@@ -13,24 +14,26 @@ export const link = (props: LinkProps, onClick?: () => void) =>
         (ctx) => {
             const rendered$ = ctx.rendered$;
 
-            rendered$.pipe(
-                switchMap((component) => {
-                    const linkElement = component.getElem();
-                    return fromEvent(linkElement, 'click').pipe(
-                        takeUntil(component.detached$)
-                    );
-                })
-            ).subscribe(e => {
-                e.preventDefault(); // Prevent the default link behavior
-                e.stopPropagation();
+            if (!props.native) {
+                rendered$.pipe(
+                    switchMap((component) => {
+                        const linkElement = component.getElem();
+                        return fromEvent(linkElement, 'click').pipe(
+                            takeUntil(component.detached$)
+                        );
+                    })
+                ).subscribe(e => {
+                    e.preventDefault(); // Prevent the default link behavior
+                    e.stopPropagation();
 
-                // Navigate to the new route using the router
-                router.navigateTo(props.path);
+                    // Navigate to the new route using the router
+                    router.navigateTo(props.path);
 
-                if (onClick) {
-                    onClick();
-                }
-            });
+                    if (onClick) {
+                        onClick();
+                    }
+                });
+            }
 
             return props.label;
         },
