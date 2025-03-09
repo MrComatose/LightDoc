@@ -35,9 +35,10 @@ export class InfraStack extends cdk.Stack {
     });
 
     // DynamoDB Table
-    const table = new dynamodb.Table(this, 'DatabaseTable', {
-      tableName: `${this.projectName}Table`,
-      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+    const table = new dynamodb.Table(this, 'DocumentsTable', {
+      tableName: `${this.projectName}UserDocuemntsTable`,
+      partitionKey: { name: 'user', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'id', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
     });
 
@@ -46,6 +47,10 @@ export class InfraStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'lambda.handler',
       code: lambda.Code.fromAsset('../dist/backend'),
+      environment: {
+        ["tableName"]: table.tableName,
+        ["bucketName"]: filesBucket.bucketName
+      }
     });
 
     // Grant Lambda permission to access DynamoDB
@@ -56,26 +61,49 @@ export class InfraStack extends cdk.Stack {
       restApiName: `${this.projectName}-API`,
     });
 
-    // todo add backend proxy integration with authorizer lambda
-    // todo fix coudfront and now it should point to rest api
-    const lambdaIntegration = new apigateway.LambdaIntegration(backendLambda);
-    const apiResource = api.root.addResource('api');
-    apiResource.addMethod('ANY', lambdaIntegration, {
-      authorizationType: apigateway.AuthorizationType.COGNITO,
-      authorizer: authorizer,
+
+    // Lambda proxy integration
+    const lambdaIntegration = new apigateway.LambdaIntegration(backendLambda, {
+      proxy: true, // Ensure it's a proxy integration
     });
 
+    // Create a resource and method
+    const apiResource = api.root.addResource('api');
+    const proxy = apiResource.addProxy({
+      defaultIntegration: lambdaIntegration,
+      anyMethod: true, // Enable for all HTTP methods
+      defaultMethodOptions: {
+        authorizationType: apigateway.AuthorizationType.COGNITO,
+        authorizer: authorizer,
+      }
+    });
+
+    // Step 1: Define CachePolicy that forwards the Authorization header
+    const cachePolicy = new cloudfront.CachePolicy(this, 'CachePolicy', {
+      headerBehavior: cloudfront.CacheHeaderBehavior.allowList('Authorization'),
+    });
+
+    // Step 2: Define OriginRequestPolicy (this is optional, depending on additional headers or query params)
+    const originRequestPolicy = new cloudfront.OriginRequestPolicy(this, 'OriginRequestPolicy', {
+      queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
+      cookieBehavior: cloudfront.OriginRequestCookieBehavior.none(),
+      headerBehavior: cloudfront.OriginRequestHeaderBehavior.none()
+    });
+
+    // Step 3: Set up CloudFront distribution
     const cloudFrontDistribution = new cloudfront.Distribution(this, 'CloudFrontDistribution', {
       defaultBehavior: {
         origin: s3Origin,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-
       },
       defaultRootObject: 'index.html',
       additionalBehaviors: {
         '/api/*': {
-          origin: new origins.HttpOrigin(api.url.split('/')[2]), // API Gateway origin
-          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED, // Disable caching for API requests
+          origin: new origins.RestApiOrigin(api),
+
+          cachePolicy: cachePolicy,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          originRequestPolicy: originRequestPolicy,
         },
       },
       errorResponses: [
@@ -88,6 +116,7 @@ export class InfraStack extends cdk.Stack {
         },
       ],
     });
+
 
     // DNS Setup
     // const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {

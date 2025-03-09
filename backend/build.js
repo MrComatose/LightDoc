@@ -8,7 +8,7 @@ esbuild.build({
     target: 'node14',  // Target Lambda's Node.js runtime
     outfile: path.resolve(__dirname, './../dist/backend/lambda.js'),  // Output the bundled file
     external: ['aws-sdk'],  // Exclude AWS SDK (it's already available in Lambda)
-    sourcemap: true,  // Optional: include source maps for debugging
+    sourcemap: false,  // Optional: include source maps for debugging
 }).then(() => {
     console.log('Lambda build complete.');
 }).catch((error) => {
