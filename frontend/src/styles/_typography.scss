@@ -24,8 +24,6 @@ body {
 
 // Paragraph styles
 p {
-    margin-bottom: 1em;
-    white-space: break-spaces;
 
     &.muted {
         color: $color-muted;

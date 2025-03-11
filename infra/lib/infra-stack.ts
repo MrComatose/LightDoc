@@ -66,8 +66,8 @@ export class InfraStack extends cdk.Stack {
       }
     });
 
-    // Grant Lambda permission to access DynamoDB
-    table.grantReadWriteData(backendLambda); // Grant read/write access to the DynamoDB table
+    table.grantReadWriteData(backendLambda); 
+    filesBucket.grantReadWrite(backendLambda);
 
     const [pool, authorizer] = this.CreateCognito();
     const api = new apigateway.RestApi(this, 'RestApi', {
@@ -113,7 +113,7 @@ export class InfraStack extends cdk.Stack {
       additionalBehaviors: {
         '/api/*': {
           origin: new origins.RestApiOrigin(api),
-
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
           cachePolicy: cachePolicy,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           originRequestPolicy: originRequestPolicy,

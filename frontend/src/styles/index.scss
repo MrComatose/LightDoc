@@ -1,5 +1,5 @@
 
-@use './bulma' as *; // Correctly importing all the necessary SCSS
+@use './bulma-setup' as *; // Correctly importing all the necessary SCSS
 @use './animations' as animations;
 @use './button' as button;
 @use './landing' as landing;
@@ -9,6 +9,7 @@
 @use './inputs' as inputs;
 @use './typography' as typography;
 @use './markdown' as markdown;
+
 
 :root {
   --primary-bg-color: black;

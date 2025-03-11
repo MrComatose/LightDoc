@@ -1,7 +1,7 @@
 import { ReplaySubject, Subject, auditTime, distinctUntilChanged, take, takeUntil } from 'rxjs';
 import { ulid } from 'ulid';
 
-let currentComponent: Component | null = null;
+export let currentComponent: Component | null = null;
 
 export const insideComponentScope = () => !!currentComponent;
 
@@ -13,8 +13,6 @@ export function isOnBinded(component: Component): component is OnBinded {
     return typeof (component as any)['onBinded'] === 'function';
 
 }
-
-
 
 export abstract class Component {
     /**

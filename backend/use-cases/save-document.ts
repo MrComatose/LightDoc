@@ -29,7 +29,7 @@ export const saveDocument = async (filename: string, user: string, email?: strin
             name: { S: filename },
             date: { S: createdAt },
             s3Path: { S: s3Key },
-            status: { S: "created" },
+            status: { S: "Created" },
             hash: { S: "" },
             sign: { S: "" }
         }

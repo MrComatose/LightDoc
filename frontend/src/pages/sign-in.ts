@@ -52,7 +52,7 @@ const signIn = () => {
             console.log("Login successful:", result);
             loading.value = false;
             setUser(result);
-            router.navigateTo('/');
+            router.navigateTo('/documents');
         },
         onFailure: (err: Error) => {
             console.error("Login failed:", err);

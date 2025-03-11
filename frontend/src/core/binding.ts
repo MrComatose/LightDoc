@@ -35,6 +35,7 @@ export const resetScope = () => currentScope = undefined;
 export const initScope = () => currentScope = [];
 
 export interface BindingProps<TType> {
+    name?: string;
     getValue(): TType;
     setValue(v: TType): void;
     subscribe: (sub: () => void) => void;
@@ -79,7 +80,7 @@ export class Binding<TType extends Rune> {
     * @param reducer for two way binding
     * @returns 
     */
-    public map<TMappingType extends Rune>(selector: (x: TType) => TMappingType, reducer: (state: TType, newValue: TMappingType) => TType) {
+    public map<TMappingType extends Rune>(selector: (x: TType) => TMappingType, reducer: (state: TType, newValue: TMappingType) => TType, name?: string) {
         const next = new Binding({
             getValue: () => {
                 return selector(this.value);
@@ -87,7 +88,8 @@ export class Binding<TType extends Rune> {
             setValue: (v) => {
                 this.value = reducer(this.value, v)
             },
-            subscribe: this.props.subscribe
+            subscribe: this.props.subscribe,
+            name
         });
 
         return next;
@@ -98,7 +100,7 @@ export class Binding<TType extends Rune> {
 export const observe = <TType extends Rune>(source: Observable<TType>) => new ReactiveBindingComponent(source);
 
 
-export const bind = <TType extends Rune>(initValue: TType) => {
+export const bind = <TType extends Rune>(initValue: TType, name?: string) => {
     const source$ = new BehaviorSubject(initValue);
 
     return new Binding({
@@ -108,6 +110,7 @@ export const bind = <TType extends Rune>(initValue: TType) => {
         setValue(v) {
             source$.next(v);
         },
-        subscribe: source$.subscribe.bind(source$)
+        subscribe: source$.subscribe.bind(source$),
+        name
     });
 };

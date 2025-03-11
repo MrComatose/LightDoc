@@ -7,6 +7,9 @@
 @use "bulma/sass/form" as *;
 @use "bulma/sass/components" as *;
 @use "bulma/sass/layout" as *;
+@use "bulma/sass/utilities" as *;
+@use 'bulma/sass/utilities/initial-variables' as *;
+
 
 // If you need only specific modules, make sure to import them correctly
 // @use 'bulma/sass/components/button' as button;

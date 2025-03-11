@@ -29,13 +29,13 @@ export const routeOutlet = (paths: RouteConfig[], notFound?: Rune) => component(
             if (!result) {
                 return notFound ?? defaultNotFound;
             }
-
             const [route, params] = result;
 
             currentRoute = parentRouteSnapshot ? parentRouteSnapshot + route.path : route.path;
+
             return route.view(params);
         }),
-        distinctUntilChanged()
+        distinctUntilChanged(),
     );
 
     return `${observe(view$)}`;
