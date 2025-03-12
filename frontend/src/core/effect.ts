@@ -13,7 +13,7 @@ export const effect = (fn: () => void) => {
     }
 
     return combineLatest(scope.map(x => x.asObservable().pipe(distinctUntilChanged())))
-        .pipe(debounceTime(16), takeUntil(currentComponent?.detached$ ?? NEVER))
+        .pipe(takeUntil(currentComponent?.detached$ ?? NEVER), debounceTime(16))
         .subscribe(fn);
 }
 

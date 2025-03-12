@@ -10,6 +10,11 @@ let currentRoute: string;
 
 export const defaultNotFound = typingMarkdown(of("## ", "404"))
 
+export const redirect = (path: string) => component(() => {
+    router.navigateTo(path);
+});
+
+// TODO params and query params
 export const routeOutlet = (paths: RouteConfig[], notFound?: Rune) => component((ctx) => {
     const parentRouteSnapshot = currentRoute;
 
@@ -30,6 +35,7 @@ export const routeOutlet = (paths: RouteConfig[], notFound?: Rune) => component(
                 return notFound ?? defaultNotFound;
             }
             const [route, params] = result;
+            console.log(route, params)
 
             currentRoute = parentRouteSnapshot ? parentRouteSnapshot + route.path : route.path;
 

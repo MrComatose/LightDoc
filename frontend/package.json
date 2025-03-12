@@ -12,8 +12,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.145",
-    "@types/google.maps": "^3.58.1",
     "clean-webpack-plugin": "^4.0.0",
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^7.0.0",
@@ -31,12 +29,9 @@
     "webpack-merge": "^6.0.1"
   },
   "dependencies": {
-    "@googlemaps/js-api-loader": "^1.16.8",
     "amazon-cognito-identity-js": "^6.3.12",
-    "aws-lambda": "^1.0.7",
     "bulma": "^1.0.3",
     "jwt-decode": "^4.0.0",
-    "marked": "^13.0.3",
     "openai": "^4.0.0",
     "rxjs": "^7.8.1",
     "ulid": "^2.3.0"

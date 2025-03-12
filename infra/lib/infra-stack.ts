@@ -66,7 +66,7 @@ export class InfraStack extends cdk.Stack {
       }
     });
 
-    table.grantReadWriteData(backendLambda); 
+    table.grantReadWriteData(backendLambda);
     filesBucket.grantReadWrite(backendLambda);
 
     const [pool, authorizer] = this.CreateCognito();
@@ -90,19 +90,6 @@ export class InfraStack extends cdk.Stack {
         authorizer: authorizer,
       }
     });
-
-    // Step 1: Define CachePolicy that forwards the Authorization header
-    const cachePolicy = new cloudfront.CachePolicy(this, 'CachePolicy', {
-      headerBehavior: cloudfront.CacheHeaderBehavior.allowList('Authorization'),
-    });
-
-    // Step 2: Define OriginRequestPolicy (this is optional, depending on additional headers or query params)
-    const originRequestPolicy = new cloudfront.OriginRequestPolicy(this, 'OriginRequestPolicy', {
-      queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
-      cookieBehavior: cloudfront.OriginRequestCookieBehavior.none(),
-      headerBehavior: cloudfront.OriginRequestHeaderBehavior.none()
-    });
-
     // Step 3: Set up CloudFront distribution
     const cloudFrontDistribution = new cloudfront.Distribution(this, 'CloudFrontDistribution', {
       defaultBehavior: {
@@ -114,9 +101,9 @@ export class InfraStack extends cdk.Stack {
         '/api/*': {
           origin: new origins.RestApiOrigin(api),
           allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-          cachePolicy: cachePolicy,
+          cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          originRequestPolicy: originRequestPolicy,
+          originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
         },
       },
       errorResponses: [

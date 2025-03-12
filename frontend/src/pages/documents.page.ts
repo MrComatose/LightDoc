@@ -1,4 +1,4 @@
-import { distinctUntilChanged, finalize, map, startWith, switchMap, tap } from "rxjs/operators";
+import { distinctUntilChanged, finalize, map, startWith, switchMap } from "rxjs/operators";
 import { btn, progressBar } from "../components";
 import { bind, component, effect, observe } from "../core";
 import { deleteDocument, getDocumentById, getDocuments, uploadDocument } from "../services"; // Assuming you have a service for getting documents
@@ -24,19 +24,16 @@ const loadAlldocs = () => {
 
 const file = bind<File | undefined>(undefined, "File");
 const selectedDocument = bind<UserDocument | undefined>(undefined, "Document");
-const filePreview = observe(selectedDocument.asObservable().pipe(map(x => component.html`
-    <iframe src="https://viewerjs.org/ViewerJS/?presentation=true&zoom=1.5#${x?.presignedUrl ?? ""}" width="100%" height="600px"></iframe>
-    `)));
 const routes: RouteConfig[] = [
     {
         path: '/:id',
-        view: ({ id }) => component(() => {
-            effect(() => {
-                selectedDocument.value = documents.value.find(x => x.id === id);
-            });
+        view: ({ id }) => documents.select(docs => docs.find(x => x.id === id))
+            .mapTo(doc => component.html`
+    <iframe src="https://viewerjs.org/ViewerJS/?presentation=true&zoom=1.5#${doc?.presignedUrl ?? ""}" width="100%" height="600px"></iframe>
+    `.afterViewInit(() => {
+                selectedDocument.value = doc;
 
-            return filePreview;
-        })
+            }))
     },
     {
         path: '',

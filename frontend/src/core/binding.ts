@@ -94,6 +94,10 @@ export class Binding<TType extends Rune> {
 
         return next;
     }
+
+    public select<TMappingType extends Rune>(selector: (x: TType) => TMappingType) {
+        return observe(this.asObservable().pipe(map(selector)));
+    }
 }
 
 

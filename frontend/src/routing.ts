@@ -1,4 +1,5 @@
-import { RouteConfig, routeOutlet, router } from "./router";
+import { component } from "./core";
+import { redirect, RouteConfig, routeOutlet, router } from "./router";
 import { load } from "./util";
 
 
@@ -16,10 +17,7 @@ const config: RouteConfig[] = [
     },
     {
         path: '',
-        view: () => {
-            router.navigateTo('documents');
-        },
-
+        view: () => redirect('/documents')
     },
 ];
 export const routing = routeOutlet(config);
