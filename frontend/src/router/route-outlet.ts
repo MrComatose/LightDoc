@@ -35,7 +35,6 @@ export const routeOutlet = (paths: RouteConfig[], notFound?: Rune) => component(
                 return notFound ?? defaultNotFound;
             }
             const [route, params] = result;
-            console.log(route, params)
 
             currentRoute = parentRouteSnapshot ? parentRouteSnapshot + route.path : route.path;
 

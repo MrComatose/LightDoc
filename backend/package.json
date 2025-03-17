@@ -27,7 +27,10 @@
     "aws-serverless-express": "^3.4.0",
     "axios": "^1.8.1",
     "cors": "^2.8.5",
+    "encoding": "^0.1.13",
     "express": "^4.21.2",
+    "gost89": "^0.1.11",
+    "jkurwa": "^1.21.2",
     "jsonwebtoken": "^9.0.2",
     "node-gost": "^1.0.2",
     "uuidv7": "^1.0.2"

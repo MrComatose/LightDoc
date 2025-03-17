@@ -1,13 +1,13 @@
 import { distinctUntilChanged, finalize, map, startWith, switchMap } from "rxjs/operators";
 import { btn, progressBar } from "../components";
 import { bind, component, effect, observe } from "../core";
-import { deleteDocument, getDocumentById, getDocuments, uploadDocument } from "../services"; // Assuming you have a service for getting documents
+import { deleteDocument, getDocumentById, getDocuments, isAuthenticated, uploadDocument } from "../services"; // Assuming you have a service for getting documents
 
-import { UserDocument } from "../../../shared/models";
+import { ALLOWED_DOC_EXTENSIONS, UserDocument } from "../../../shared/models";
 import { fileInput } from "../components/file-input";
 import { documentsLayout } from "../layout/documents.layout";
-import { RouteConfig, routeOutlet, router } from "../router";
-import { documentsPanel } from "../sections";
+import { redirect, RouteConfig, routeOutlet, router } from "../router";
+import { documentsPanel, signDocument } from "../sections";
 import './documents.scss';
 
 const loading = bind<boolean>(true);
@@ -23,25 +23,32 @@ const loadAlldocs = () => {
 }
 
 const file = bind<File | undefined>(undefined, "File");
-const selectedDocument = bind<UserDocument | undefined>(undefined, "Document");
+const selectedDocumentId = bind<string | undefined>(undefined, "Document");
+
+const selectedDocument = selectedDocumentId.map<UserDocument | undefined>(id => documents.value.find(x => x.id === id), (id, doc) => doc?.id,
+    'selectedDocument',
+    [documents]);
 const routes: RouteConfig[] = [
     {
         path: '/:id',
-        view: ({ id }) => documents.select(docs => docs.find(x => x.id === id))
-            .mapTo(doc => component.html`
+        view: ({ id }) =>
+            documents.select(docs => docs.find(x => x.id === id))
+                .mapTo(doc => component.html`
     <iframe src="https://viewerjs.org/ViewerJS/?presentation=true&zoom=1.5#${doc?.presignedUrl ?? ""}" width="100%" height="600px"></iframe>
     `.afterViewInit(() => {
-                selectedDocument.value = doc;
+                    selectedDocument.value = doc;
 
-            }))
+                }))
     },
     {
         path: '',
-        view: () => component(() => {
-            effect(() => {
-                selectedDocument.value = documents.value[0];
-            });
-        })
+        view: () => {
+            if (selectedDocument.value) {
+                return redirect('/documents/' + selectedDocument.value.id);
+            }
+
+            return documents.select(docs => docs.length ? redirect('/documents/' + docs[0].id) : component.html`<div>Немає документів</div>`);
+        },
 
     }
 
@@ -49,15 +56,23 @@ const routes: RouteConfig[] = [
 const documentsRouter = routeOutlet(routes);
 
 const deleteButton = btn(`Видалити`, () => {
-    if (selectedDocument.value) {
-        const id = selectedDocument.value.id;
-        deleteDocument(id).subscribe(() => {
+    if (selectedDocumentId.value) {
+        const id = selectedDocumentId.value;
+        loading.value = true;
+
+        deleteDocument(id).pipe(finalize(() => {
+            loading.value = false;
+        })).subscribe(() => {
+
             documents.value = documents.value.filter(d => d.id !== id);
+            selectedDocumentId.value = undefined;
             router.navigateTo('/documents');
         })
     }
 
-}, 'is-danger');
+}, {
+    type: 'is-danger'
+});
 
 const deleteButtonForSelectedDocument = selectedDocument.asObservable().pipe(
     startWith(selectedDocument.value),
@@ -75,11 +90,14 @@ export const documentsPage = documentsLayout(
     ${loader}
 <nav class="navbar" role="navigation" aria-label="main navigation">
   <div id="navbarBasicExample" class="navbar-menu">
+    <div class="navbar-item">
+        ${fileInput('Додати файл', file, { allowedExtensions: ALLOWED_DOC_EXTENSIONS })} 
+    </div>
     <div class="navbar-end">
       <div class="navbar-item">
         <div class="buttons">
+        ${signDocument(selectedDocument)}
         ${observe(deleteButtonForSelectedDocument)}
-        ${fileInput('Додати файл', file)}
         </div>
       </div>
     </div>
@@ -105,6 +123,7 @@ export const documentsPage = documentsLayout(
                 file.value = undefined;
 
                 documents.value = [...documents.value, newDoc]
+                router.navigateTo(`/documents/${newDoc.id}`);
             });
     });
 

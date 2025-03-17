@@ -49,7 +49,6 @@ const signIn = () => {
 
     currentUser.authenticateUser(authenticationDetails, {
         onSuccess: (result: AmazonCognitoIdentity.CognitoUserSession) => {
-            console.log("Login successful:", result);
             loading.value = false;
             setUser(result);
             router.navigateTo('/documents');
@@ -60,8 +59,6 @@ const signIn = () => {
             loading.value = false;
         },
         newPasswordRequired: (userAttributes, callback) => {
-            console.log('User is required to set a new password');
-
             password.value = ""
             resetPasswordRequired.value = true;
         }
@@ -71,7 +68,6 @@ const signIn = () => {
 const verifiedPassword = bind<string>("");
 const resetPassword = () => {
     loading.value = true;
-    console.log('User is required to set a new password');
 
     if (password.value !== verifiedPassword.value) {
         throw new Error("Паролі не однакові");
@@ -83,7 +79,6 @@ const resetPassword = () => {
 
     currentUser.completeNewPasswordChallenge(password.value, {}, {
         onSuccess: (result) => {
-            console.log('New password set successfully:', result);
             resetPasswordRequired.value = false;
             loading.value = false;
             verifiedPassword.value = "";

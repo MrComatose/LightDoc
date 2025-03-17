@@ -1,6 +1,7 @@
 import { BehaviorSubject, map, Observable, ReplaySubject, switchMap } from "rxjs";
 import * as AmazonCognitoIdentity from 'amazon-cognito-identity-js';
 import { jwtDecode, JwtPayload } from 'jwt-decode';
+import { observe } from "../core";
 
 
 
@@ -16,7 +17,24 @@ const user = userPool.getCurrentUser();
 const userStore = new ReplaySubject<AmazonCognitoIdentity.CognitoUserSession | null>(1);
 if (user) {
     user.getSession((_: any, session: AmazonCognitoIdentity.CognitoUserSession) => {
-        userStore.next(session)
+
+        var idToken = session.getIdToken();
+
+        if (idToken) {
+            userStore.next(session);
+        }
+        else {
+            var refreshToken = session.getRefreshToken();
+            user.refreshSession(refreshToken, (err: any, session: AmazonCognitoIdentity.CognitoUserSession) => {
+                if (err) {
+                    console.error("Error refreshing session:", err);
+                    userStore.next(null);
+                    return;
+                }
+
+                userStore.next(session)
+            })
+        }
     })
 } else {
     userStore.next(null);
@@ -32,7 +50,6 @@ export const removeUser = () => {
     userPool.getCurrentUser()?.signOut();
     userStore.next(null)
 };
-
 export const getClaims = (): Observable<{ email: string | null, sub: string | null } | null> => user$.pipe(
     map((session) => {
         if (!session || !session.getIdToken()) {
@@ -53,4 +70,8 @@ export const getClaims = (): Observable<{ email: string | null, sub: string | nu
             return null;
         }
     })
+);
+
+export const isAuthenticated = getClaims().pipe(
+    map(session => !!session)   // Map session to boolean
 );

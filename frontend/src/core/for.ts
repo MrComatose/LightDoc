@@ -1,8 +1,11 @@
 import { Observable, switchMap, takeUntil } from "rxjs";
 import { Component } from "./component";
 import { ComponentOptions, component } from "./functional-component";
+import { Binding, ReactiveBinding } from "./binding";
 
 
+
+export const foreEach = <TComponent extends Component>(args$: Binding<TComponent[]> | ReactiveBinding<TComponent[]>, options?: ComponentOptions) => loop(args$.asObservable(), options);
 export const loop = <TComponent extends Component>(args$: Observable<TComponent[]>, options?: ComponentOptions) => component(({ rendered$, detached$, getElement }) => {
     const changes$ = args$.pipe(takeUntil(detached$));
 

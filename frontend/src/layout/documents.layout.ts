@@ -5,7 +5,7 @@ import { Rune, component } from "../core";
 
 export const documentsLayout = (navigation: Rune, actions: Rune, child: Rune) => component.html`
 <div class="container is-flex is-justify-content-center">
-    <div class="columns is-gapless is-fullheight" >
+    <div class="columns is-fullheight" >
         <aside class="column is-3 p-4 has-background-light">
             ${navigation}
         </aside>

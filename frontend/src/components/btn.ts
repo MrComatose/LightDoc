@@ -1,5 +1,5 @@
-import { fromEvent, switchMap } from "rxjs";
-import { Component, component } from "../core";
+import { filter, fromEvent, switchMap, takeUntil } from "rxjs";
+import { Binding, Component, component, ReactiveBinding } from "../core";
 
 type ButtonType =
     | 'is-primary'
@@ -14,21 +14,36 @@ type ButtonType =
     | 'is-white'
     | 'is-text'
     | 'is-outlined'
-    | 'is-inverted';
+    | 'is-inverted'
+    | '';
 
-export const btn = (label: string | Component, onClick: () => void, type: ButtonType = 'is-primary') =>
+interface ButtonProps {
+    type?: ButtonType;
+    disabled?: ReactiveBinding<boolean>;
+}
+
+export const btn = (label: string | Component, onClick: () => void, props: ButtonProps = {}) =>
     component(
-        (ctx) => {
-            ctx.rendered$.pipe(switchMap(ctx => {
-                const btnElement = ctx.getElem();
-
-                return fromEvent(btnElement, 'click')
-            })).subscribe(onClick);
-
-            return label
-        },
+        () => label,
         {
             name: "button",
-            class: `button ${type} fade-in` // Додаємо тип кнопки як клас
+            class: `button ${props.type ?? ''} fade-in`
         }
-    )
+    ).afterViewInit(c => {
+        const btnElement = c.getElem();
+
+        if (props.disabled) {
+            props.disabled.asObservable()
+                .pipe(takeUntil(c.detached$))
+                .subscribe((isDisabled) => {
+                    if (isDisabled) {
+                        btnElement.setAttribute('disabled', 'true');
+                    } else {
+                        btnElement.removeAttribute('disabled');
+                    }
+                });
+        }
+
+        fromEvent(btnElement, 'click').pipe(filter(() => !props.disabled?.currentValue)).subscribe(onClick);
+
+    });

@@ -6,7 +6,11 @@ import jwt from "jsonwebtoken";
 import { getDocuments } from "./use-cases/get-documents";
 import cors from "cors";  // Import cors
 import { getDocumentById } from "./use-cases/get-document-by-id";
-import { deleteDocument } from "./use-cases/delete-document";
+import { deleteFile } from "./use-cases/delete-file";
+import { saveKey } from "./use-cases/save-key";
+import { getKeys } from "./use-cases/get-keys";
+import { getKeyById } from "./use-cases/get-key-by-id";
+import { signDocument } from "./use-cases/sign-document";
 
 export const app = express();
 
@@ -90,11 +94,11 @@ app.delete("/api/documents/:fileId", async (req: Request, res: Response): Promis
 
         const fileId = req.params.fileId;
 
-        await deleteDocument(decoded.sub, fileId);
+        await deleteFile(decoded.sub, fileId);
 
         return res.status(204).json({});
     } catch (error) {
-        console.error("Error fetching document:", error);
+        console.error("Error deleting document:", error);
         return res.status(500).json({ error: "Internal server error" });
     }
 });
@@ -122,6 +126,137 @@ app.post("/api/documents", async (req: Request, res: Response): Promise<any> => 
         return res.json(result);
     } catch (error) {
         console.error("Error saving document:", error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+
+app.post("/api/documents/:docId/sign", async (req: Request, res: Response): Promise<any> => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        const token = authHeader.split(" ")[1];
+        const decoded = jwt.decode(token) as { sub?: string, email?: string };
+
+        if (!decoded || !decoded.sub) {
+            return res.status(401).json({ error: "Invalid token" });
+        }
+
+        const { docId } = req.params;
+        const { keyId, password } = req.body;
+        if (!keyId || !password || !docId) {
+            return res.status(400).json({ error: "Invalid request." });
+        }
+
+        const result = await signDocument(docId, keyId, decoded.sub, password);
+        return res.json(result);
+    } catch (error) {
+        console.error("Error saving document:", error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+
+
+app.get("/api/keys", async (req: Request, res: Response): Promise<any> => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        const token = authHeader.split(" ")[1];
+        const decoded = jwt.decode(token) as { sub?: string };
+
+        if (!decoded || !decoded.sub) {
+            return res.status(401).json({ error: "Invalid token" });
+        }
+
+        const result = await getKeys(decoded.sub);
+        return res.json(result);
+    } catch (error) {
+        console.error("Error saving key:", error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+app.get("/api/keys/:fileId", async (req: Request, res: Response): Promise<any> => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        const token = authHeader.split(" ")[1];
+
+        const decoded = jwt.decode(token) as { sub?: string };
+
+        if (!decoded || !decoded.sub) {
+            return res.status(401).json({ error: "Invalid token" });
+        }
+
+        const fileId = req.params.fileId;
+
+        const result = await getKeyById(decoded.sub, fileId);
+
+        return res.json(result);
+    } catch (error) {
+        console.error("Error fetching key:", error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+app.delete("/api/keys/:fileId", async (req: Request, res: Response): Promise<any> => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        const token = authHeader.split(" ")[1];
+
+        const decoded = jwt.decode(token) as { sub?: string };
+
+        if (!decoded || !decoded.sub) {
+            return res.status(401).json({ error: "Invalid token" });
+        }
+
+        const fileId = req.params.fileId;
+
+        await deleteFile(decoded.sub, fileId);
+
+        return res.status(204).json({});
+    } catch (error) {
+        console.error("Error deleting key:", error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+app.post("/api/keys", async (req: Request, res: Response): Promise<any> => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        const token = authHeader.split(" ")[1];
+        const decoded = jwt.decode(token) as { sub?: string, email?: string };
+
+        if (!decoded || !decoded.sub) {
+            return res.status(401).json({ error: "Invalid token" });
+        }
+
+        const { filename } = req.body;
+        if (!filename) {
+            return res.status(400).json({ error: "Filename is required" });
+        }
+
+        const result = await saveKey(filename, decoded.sub, decoded.email);
+        return res.json(result);
+    } catch (error) {
+        console.error("Error saving key:", error);
         return res.status(500).json({ error: "Internal server error" });
     }
 });

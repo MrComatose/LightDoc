@@ -1,8 +1,6 @@
 import { combineLatest, fromEvent, map, startWith, switchMap, takeUntil } from "rxjs";
 import { UserDocument } from "../../../shared/models";
 import { bind, Binding, component, effect, loop } from "../core";
-import { btn, formControl } from "../components";
-import { fileInput } from "../components/file-input";
 
 
 export interface DocumentsPanelProps {

@@ -4,11 +4,11 @@ import { switchMap, take } from "rxjs/operators";
 import { user$ } from "./user.service";
 import { apiOrigin } from "./config.service";
 
-import { UserDocument, PresignedUrl, CreateDocumentResponse } from '../../../shared/models';
+import { UserKey, PresignedUrl, CreateKeyResponse } from '../../../shared/models';
 
-const apiUrl = `${apiOrigin}/api/documents`;
+const apiUrl = `${apiOrigin}/api/keys`;
 
-const fetchDocumentsFromAPI = (token: string): Promise<UserDocument[]> => {
+const fetchKeysFromAPI = (token: string): Promise<UserKey[]> => {
     return fetch(apiUrl, {
         method: 'GET',
         headers: {
@@ -18,30 +18,30 @@ const fetchDocumentsFromAPI = (token: string): Promise<UserDocument[]> => {
     })
         .then(response => {
             if (!response.ok) {
-                throw new Error(`Failed to fetch documents: ${response.statusText}`);
+                throw new Error(`Failed to fetch keys: ${response.statusText}`);
             }
             return response.json();
         });
 };
 
-export const getDocuments = (): Observable<UserDocument[]> => {
+export const getKeys = (): Observable<UserKey[]> => {
     return user$.pipe(
         take(1),
         switchMap(user => {
             const token = user?.getIdToken();
 
             if (!token) {
-                return new Observable<UserDocument[]>(observer => {
+                return new Observable<UserKey[]>(observer => {
                     observer.error(new Error("No ID token available"));
                 });
             }
 
-            return from(fetchDocumentsFromAPI(token.getJwtToken()));
+            return from(fetchKeysFromAPI(token.getJwtToken()));
         })
     );
 };
 
-const fetchDocumentFromAPI = (token: string, fileId: string): Promise<UserDocument> => {
+const fetchKeyFromAPI = (token: string, fileId: string): Promise<UserKey> => {
     return fetch(`${apiUrl}/${fileId}`, {
         method: 'GET',
         headers: {
@@ -51,30 +51,30 @@ const fetchDocumentFromAPI = (token: string, fileId: string): Promise<UserDocume
     })
         .then(response => {
             if (!response.ok) {
-                throw new Error(`Failed to fetch documents: ${response.statusText}`);
+                throw new Error(`Failed to fetch keys: ${response.statusText}`);
             }
             return response.json();
         });
 };
 
-export const getDocumentById = (fileId: string): Observable<UserDocument> => {
+export const getKeyById = (fileId: string): Observable<UserKey> => {
     return user$.pipe(
         take(1),
         switchMap(user => {
             const token = user?.getIdToken();
 
             if (!token) {
-                return new Observable<UserDocument>(observer => {
+                return new Observable<UserKey>(observer => {
                     observer.error(new Error("No ID token available"));
                 });
             }
 
-            return from(fetchDocumentFromAPI(token.getJwtToken(), fileId));
+            return from(fetchKeyFromAPI(token.getJwtToken(), fileId));
         })
     );
 };
 
-const deleteDocumentFromAPI = (token: string, fileId: string): Promise<void> => {
+const deleteKeyFromAPI = (token: string, fileId: string): Promise<void> => {
     return fetch(`${apiUrl}/${fileId}`, {
         method: 'DELETE',
         headers: {
@@ -84,13 +84,13 @@ const deleteDocumentFromAPI = (token: string, fileId: string): Promise<void> => 
     })
         .then(response => {
             if (!response.ok) {
-                throw new Error(`Failed to delete document: ${response.statusText}`);
+                throw new Error(`Failed to delete key: ${response.statusText}`);
             }
         });
 };
 
 
-export const deleteDocument = (fileId: string): Observable<void> => {
+export const deleteKey = (fileId: string): Observable<void> => {
     return user$.pipe(
         take(1),
         switchMap(user => {
@@ -102,7 +102,7 @@ export const deleteDocument = (fileId: string): Observable<void> => {
                 });
             }
 
-            return from(deleteDocumentFromAPI(token.getJwtToken(), fileId));
+            return from(deleteKeyFromAPI(token.getJwtToken(), fileId));
         })
     );
 };
@@ -126,7 +126,7 @@ const uploadFileToS3 = (file: File, presignedUrl: PresignedUrl): Promise<void> =
     });
 };
 
-const createDocumentRequest = (token: string, filename: string): Promise<CreateDocumentResponse> => {
+const createKeyRequest = (token: string, filename: string): Promise<CreateKeyResponse> => {
     return fetch(apiUrl, {
         method: "POST",
         headers: {
@@ -136,21 +136,21 @@ const createDocumentRequest = (token: string, filename: string): Promise<CreateD
         body: JSON.stringify({ filename }),
     }).then(response => {
         if (!response.ok) {
-            throw new Error(`Failed to create document: ${response.statusText}`);
+            throw new Error(`Failed to create key: ${response.statusText}`);
         }
         return response.json();
     });
 };
 
 const saveFileAsync = async (token: string, file: File) => {
-    const { id, presignedUrl } = await createDocumentRequest(token, file.name);
+    const { id, presignedUrl } = await createKeyRequest(token, file.name);
 
     await uploadFileToS3(file, presignedUrl);
 
     return id;
 }
 
-export const uploadDocument = (file: File): Observable<string> => {
+export const uploadKey = (file: File): Observable<string> => {
     return user$.pipe(
         take(1),
         switchMap(user => {
@@ -161,38 +161,6 @@ export const uploadDocument = (file: File): Observable<string> => {
             }
 
             return from(saveFileAsync(token.getJwtToken(), file));
-        })
-    );
-};
-
-
-const signDocumentRequest = (token: string, docId: string, keyId: string, password: string): Promise<any> => {
-    return fetch(`${apiUrl}/${docId}/sign`, {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ keyId, password }),
-    }).then(response => {
-        if (!response.ok) {
-            throw new Error(`Failed to sign document: ${response.statusText}`);
-        }
-        return response.json();
-    });
-};
-
-export const signUserDocument = (docId: string, keyId: string, password: string): Observable<string> => {
-    return user$.pipe(
-        take(1),
-        switchMap(user => {
-            const token = user?.getIdToken();
-
-            if (!token) {
-                throw new Error("No ID token available");
-            }
-
-            return from(signDocumentRequest(token.getJwtToken(), docId, keyId, password));
         })
     );
 };

@@ -8,10 +8,10 @@ import { UserDocument } from "../../shared/models";
 const s3 = new S3Client({});
 const dynamoDb = new DynamoDBClient({});
 
-export const getDocumentById = async (user: string, id: string): Promise<UserDocument> => {
+export const getKeyById = async (user: string, id: string): Promise<UserDocument> => {
     const { TABLE_NAME, BUCKET_NAME } = getConfig();
 
-    if (!id.startsWith("document-")) {
+    if (!id.startsWith("key-")) {
         throw new Error(`Invalid document id: ${id}`);
     }
 
@@ -24,7 +24,7 @@ export const getDocumentById = async (user: string, id: string): Promise<UserDoc
         },
         ExpressionAttributeValues: {
             ":user": { S: user },
-            ":id": { S: id }
+            ":id": { S: id },
         }
     };
 

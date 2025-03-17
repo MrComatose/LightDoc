@@ -10,3 +10,5 @@ export * from './form-control';
 export * from './undexpected-error';
 export * from './checkbox';
 export * from './table';
+export * from './logo';
+export * from './file-input';

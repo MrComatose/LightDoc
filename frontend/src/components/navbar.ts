@@ -3,13 +3,9 @@ import { component, observe, Rune } from "../core";
 import { link } from "./link";
 import { themeSwitcher } from "./theme-switcher";
 import { getClaims } from "../services/user.service";
+import { logo } from "./logo";
 
-const time$ = interval(1000).pipe(
-    map(() => (new Date().toLocaleTimeString())),
-    startWith("Loading..."));
-const time = observe(time$);
 
-const homeLink = link({ label: "Chat GPT", path: "/home" });
 const signIn = link({ label: "LogIn", path: "/sign-in" });
 
 const claims$ = getClaims()
@@ -25,7 +21,7 @@ const content$ = claims$.pipe(map(c => c ? authorizedContent(c.email) : unauthor
 export const navBar = component.html`
         <nav class="navbar fade-in" id="main-navbar"> 
             <div class="navbar__container">
-                <div class="navbar-brand">${time}</div>
+                <div class="navbar-brand">${logo}</div>
                 <ul class="navbar-nav">
                     ${observe(content$)}
                     

@@ -1,7 +1,7 @@
-import { BehaviorSubject, Observable, map, takeUntil } from "rxjs";
+import { BehaviorSubject, Observable, combineLatest, map, takeUntil } from "rxjs";
 import { Component, Rune } from "./component";
 
-export class ReactiveBindingComponent<TType extends Rune> extends Component {
+export class ReactiveBinding<TType extends Rune> extends Component {
     /**
      *
      */
@@ -24,7 +24,11 @@ export class ReactiveBindingComponent<TType extends Rune> extends Component {
     }
 
     public mapTo(mutator: (value: TType) => Rune) {
-        return new ReactiveBindingComponent(this.source$.pipe(map(mutator)));
+        return new ReactiveBinding(this.source$.pipe(map(mutator)));
+    }
+
+    public asObservable() {
+        return this.source$;
     }
 }
 
@@ -71,7 +75,7 @@ export class Binding<TType extends Rune> {
 
 
     public toString(): string {
-        return (new ReactiveBindingComponent<TType>(this.asObservable())).toString();
+        return (new ReactiveBinding<TType>(this.asObservable())).toString();
     }
 
     /**
@@ -80,7 +84,12 @@ export class Binding<TType extends Rune> {
     * @param reducer for two way binding
     * @returns 
     */
-    public map<TMappingType extends Rune>(selector: (x: TType) => TMappingType, reducer: (state: TType, newValue: TMappingType) => TType, name?: string) {
+    public map<TMappingType extends Rune>(
+        selector: (x: TType) => TMappingType,
+        reducer: (state: TType, newValue: TMappingType) => TType, name?: string,
+        alsoWatch: Binding<any>[] = []
+    ) {
+        const observer = combineLatest([...alsoWatch.map(x => x.asObservable()), this.asObservable()]);
         const next = new Binding({
             getValue: () => {
                 return selector(this.value);
@@ -88,7 +97,7 @@ export class Binding<TType extends Rune> {
             setValue: (v) => {
                 this.value = reducer(this.value, v)
             },
-            subscribe: this.props.subscribe,
+            subscribe: observer.subscribe.bind(observer),
             name
         });
 
@@ -101,7 +110,7 @@ export class Binding<TType extends Rune> {
 }
 
 
-export const observe = <TType extends Rune>(source: Observable<TType>) => new ReactiveBindingComponent(source);
+export const observe = <TType extends Rune>(source: Observable<TType>) => new ReactiveBinding(source);
 
 
 export const bind = <TType extends Rune>(initValue: TType, name?: string) => {

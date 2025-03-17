@@ -5,7 +5,7 @@ import { getConfig } from "../config";
 const s3 = new S3Client({});
 const dynamoDb = new DynamoDBClient({});
 
-export const deleteDocument = async (user: string, id: string): Promise<void> => {
+export const deleteFile = async (user: string, id: string): Promise<void> => {
     const { TABLE_NAME, BUCKET_NAME } = getConfig();
 
     const getItemParams = {

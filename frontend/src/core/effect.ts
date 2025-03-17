@@ -1,4 +1,4 @@
-import { combineLatest, debounceTime, distinctUntilChanged, NEVER, takeUntil } from "rxjs";
+import { combineLatest, distinctUntilChanged, NEVER, takeUntil } from "rxjs";
 import { Binding, currentScope, initScope, resetScope } from "./binding";
 import { currentComponent, Rune } from "./component";
 
@@ -13,7 +13,7 @@ export const effect = (fn: () => void) => {
     }
 
     return combineLatest(scope.map(x => x.asObservable().pipe(distinctUntilChanged())))
-        .pipe(takeUntil(currentComponent?.detached$ ?? NEVER), debounceTime(16))
+        .pipe(takeUntil(currentComponent?.detached$ ?? NEVER))
         .subscribe(fn);
 }
 
@@ -25,6 +25,6 @@ export const useEffect = (fn: () => void, bindings: Binding<Rune>[] | undefined)
     }
 
     return combineLatest(bindings.map(x => x.asObservable().pipe(distinctUntilChanged())))
-        .pipe(debounceTime(16), takeUntil(currentComponent?.detached$ ?? NEVER))
+        .pipe(takeUntil(currentComponent?.detached$ ?? NEVER))
         .subscribe(fn);
 }
