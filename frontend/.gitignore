@@ -164,7 +164,6 @@ yarn-debug.log*
 yarn-error.log*
 
 # Generated JavaScript files
-*.js
 *.js.map
 
 # TypeScript cache
