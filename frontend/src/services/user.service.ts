@@ -18,7 +18,7 @@ const userStore = new ReplaySubject<AmazonCognitoIdentity.CognitoUserSession | n
 if (user) {
     user.getSession((_: any, session: AmazonCognitoIdentity.CognitoUserSession) => {
 
-        var idToken = session.getIdToken();
+        var idToken = session?.getIdToken();
 
         if (idToken) {
             userStore.next(session);

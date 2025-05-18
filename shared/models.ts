@@ -41,3 +41,18 @@ export const ALLOWED_DSTU_KEY_EXTENSIONS = [".dat", ".pfx", ".pk8", ".zs2", ".jk
 export const isValidDstuKeyExtension = (filename: string): boolean => {
     return ALLOWED_DSTU_KEY_EXTENSIONS.some(ext => filename.toLowerCase().endsWith(ext));
 };
+
+export interface CertificateAuthority {
+    issuerCNs: string[];
+    address: string;
+    ocspAccessPointAddress: string;
+    ocspAccessPointPort: string;
+    cmpAddress: string;
+    tspAddress: string;
+    tspAddressPort: string;
+    directAccess?: boolean;
+    qscdSNInCert?: boolean;
+    cmpCompatibility?: number;
+    certsInKey?: boolean;
+    codeEDRPOU: string;
+};

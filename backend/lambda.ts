@@ -11,8 +11,16 @@ import { saveKey } from "./use-cases/save-key";
 import { getKeys } from "./use-cases/get-keys";
 import { getKeyById } from "./use-cases/get-key-by-id";
 import { signDocument } from "./use-cases/sign-document";
+import middy from "@middy/core";
+import axios from "axios";
+import doNotWaitForEmptyEventLoop from "@middy/do-not-wait-for-empty-event-loop";
 
 export const app = express();
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Something went wrong!' });
+});
 
 app.use(cors({
     origin: (origin, callback) => {
@@ -146,13 +154,16 @@ app.post("/api/documents/:docId/sign", async (req: Request, res: Response): Prom
         }
 
         const { docId } = req.params;
-        const { keyId, password } = req.body;
+        const { keyId, password, issuer } = req.body;
         if (!keyId || !password || !docId) {
             return res.status(400).json({ error: "Invalid request." });
         }
 
-        const result = await signDocument(docId, keyId, decoded.sub, password);
-        return res.json(result);
+        const result = await signDocument(docId, keyId, decoded.sub, password, issuer);
+
+        console.log("Result", result);
+
+        return res.json(result.subject);
     } catch (error) {
         console.error("Error saving document:", error);
         return res.status(500).json({ error: "Internal server error" });
@@ -261,10 +272,34 @@ app.post("/api/keys", async (req: Request, res: Response): Promise<any> => {
     }
 });
 
+
+
+app.get("/api/issuers", async (req: Request, res: Response): Promise<any> => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        const response = await axios.get("https://iit.com.ua/download/productfiles/CAs.json");
+        return res.json(response.data);
+    } catch (error) {
+        console.error("Error fetching key:", error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
+
 // Create the server with aws-serverless-express
 const server = awsServerlessExpress.createServer(app);
 
 // The Lambda handler function
-export const handler = (event: APIGatewayEvent, context: Context) => {
-    return awsServerlessExpress.proxy(server, event, context);
+const baseHandler = async (event: APIGatewayEvent, context: Context) => {
+    context.callbackWaitsForEmptyEventLoop = false;
+    return await awsServerlessExpress.proxy(server, event, context, 'PROMISE').promise;
 };
+
+
+
+export const handler = middy()
+    .use(doNotWaitForEmptyEventLoop()) // handles common http errors and returns proper responses
+    .handler(baseHandler)

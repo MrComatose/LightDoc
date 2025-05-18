@@ -1,19 +1,13 @@
 
 import { Readable } from 'stream';
 
-import { GetItemCommand, DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getConfig } from '../config';
-
-const encoding = require("encoding");
+import * as http from "./legacy/http";
+import { CertificateAuthority } from '../../shared/models';
 const gost89 = require("gost89");
 const jk = require("jkurwa");
-import * as http from "./legacy/http";
-
-const algos = gost89.compat.algos;
-const Certificate = jk.models.Certificate;
-const Priv = jk.models.Priv;
-const Box = jk.Box;
 
 const s3 = new S3Client({});
 const dynamoDb = new DynamoDBClient({});
@@ -38,7 +32,7 @@ export const fetchFileById = async (id: string, user: string): Promise<Buffer> =
     const documents = queryResult.Items || [];
 
     if (documents.length === 0) {
-        throw new Error("Document not found");
+        throw new Error("Document not found " + id);
     }
 
     const Item = documents[0];
@@ -68,16 +62,19 @@ export const fetchFileById = async (id: string, user: string): Promise<Buffer> =
 };
 
 const openKey = (buf: Buffer, password: string) => {
-    return Priv.from_protected(buf, password, algos());
+    return jk.models.Priv.from_protected(buf, password, gost89.compat.algos());
 }
 
-export const signDocument = async (docId: string, keyId: string, user: string, keyPassword: string) => {
+export const signDocument = async (docId: string, keyId: string, user: string, keyPassword: string, issuer: string) => {
+    const algos = gost89.compat.algos;
+    const Certificate = jk.models.Certificate;
+    const Priv = jk.models.Priv;
+    const Box = jk.Box;
+
     const docFileTask = fetchFileById(docId, user);
     const keyFileTask = fetchFileById(keyId, user);
 
     const [keyFile, docFile] = await Promise.all([keyFileTask, docFileTask]);
-
-    var result = openKey(keyFile, keyPassword); // todo validation
 
     const box = new Box({ algo: algos(), query: http.query });
     box.load({ keyBuffers: [keyFile], password: keyPassword });
@@ -86,29 +83,42 @@ export const signDocument = async (docId: string, keyId: string, user: string, k
     // download https://iit.com.ua/download/productfiles/CAs.json
     // download https://iit.com.ua/download/productfiles/CACertificates.p7b
 
-    await box.findCertsCmp(['http://ca.vchasno.ua/services/cmp/', 'http://acskidd.gov.ua/services/cmp/', 'http://czo.gov.ua/services/cmp/'])
+    const CA = require("./CA.json");
+    var certAuth = CA.find(x => x.codeEDRPOU === issuer) as CertificateAuthority | null;
+
+    if (!certAuth) {
+        throw new Error('Invalid issuer ' + issuer);
+    }
+
+    var cmps = [`https://${certAuth.cmpAddress}/services/cmp/`];
+
+    await box.findCertsCmp(cmps)
 
     const ipn_ext = box.keys[0].cert.extension.ipn;
     const subject = box.keys[0].cert.subject;
 
+    console.log("Signing document", docId, "with key", keyId, "for user", user);
+
     const signedData = await box.sign(docFile, null, null, {
-        detached: false,
         tax: true,
-        tsp: true,
+        tsp: "content",
         time: Date.now()
     });
 
-    console.log(signedData);
-    console.log(signedData.type);
-
-    console.log('signedData type:', typeof signedData);
+    console.log("Document signed successfully");
+    console.log("Uploading signed document to S3");
     // Upload signed file back to S3
-    const signedFilePath = `signed/${user}/${docId}.p7s`;
+    const signedFilePath = `signed/${user}/${docId}.pdf.p7`;
     await s3.send(new PutObjectCommand({
         Bucket: getConfig().BUCKET_NAME,
         Key: signedFilePath,
-        Body: signedData,
+        Body: signedData.as_asn1(),
     }));
+    console.log("Document uploaded to S3");
+
+    if (box && box.sock) {
+        box.sock.destroy();
+    }
 
     return { ipn_ext, subject };
 

@@ -33,6 +33,8 @@
     "jkurwa": "^1.21.2",
     "jsonwebtoken": "^9.0.2",
     "node-gost": "^1.0.2",
-    "uuidv7": "^1.0.2"
+    "uuidv7": "^1.0.2",
+    "@middy/core": "^6.1.6",
+    "@middy/do-not-wait-for-empty-event-loop": "^6.1.6"
   }
 }

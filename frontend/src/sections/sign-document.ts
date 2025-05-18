@@ -1,8 +1,9 @@
-import { combineLatest, switchMap, takeUntil } from "rxjs";
-import { ALLOWED_DSTU_KEY_EXTENSIONS, UserDocument, UserKey } from "../../../shared/models";
+import { combineLatest, map, shareReplay, switchMap, takeUntil } from "rxjs";
+import { ALLOWED_DSTU_KEY_EXTENSIONS, CertificateAuthority, UserDocument, UserKey } from "../../../shared/models";
 import { btn, fileInput, formControl } from "../components";
-import { bind, Binding, component, effect, foreEach, ReactiveBinding } from "../core";
+import { bind, Binding, component, effect, foreEach, observe, ReactiveBinding } from "../core";
 import { deleteKey, getKeyById, getKeys, uploadKey, signUserDocument } from "../services";
+import { getIssuers } from "../services/issuers.service";
 
 
 const defaultFormValue = {
@@ -40,6 +41,34 @@ const keySelect = (keys: Binding<UserKey[]>, selectedKeyId: Binding<string>) => 
     })
 };
 
+const issuers$ = getIssuers().pipe(shareReplay(1));
+const issuerSelect = (keys: Binding<CertificateAuthority[]>, selectedEDRPOU: Binding<string>) => {
+    const keysOptions = keys.select(keys => keys.map(key => component.html`
+        <option value="${key.codeEDRPOU}">${key.issuerCNs[0]}</option>
+    `.afterViewInit(c => {
+        const selectElem = c.getElem() as HTMLOptionElement;
+
+        selectedEDRPOU.asObservable().pipe(takeUntil(c.detached$)).subscribe(selectedId => {
+            if (key.codeEDRPOU === selectedId) {
+                selectElem.selected = true;
+            }
+        }
+        );
+    })));
+
+    return component.html`
+    <div class="select">
+        <select>
+            ${foreEach(keysOptions)}
+        </select>
+    </div>`.afterViewInit(c => {
+        const selectElem = c.getElem().querySelector('select') as HTMLSelectElement;
+
+        selectElem.addEventListener('change', (event) => {
+            selectedEDRPOU.value = (event.target as HTMLSelectElement).value;
+        });
+    })
+};
 
 
 const key = bind<File | undefined>(undefined, "File");
@@ -57,11 +86,12 @@ const control = (label: string, name: keyof typeof defaultFormValue) => formCont
 
 const selectedKeyId = form.map(form => form.keyId, (form, keyId) => ({ ...form, keyId }));
 const formDocId = form.map(form => form.documentId, (form, documentId) => ({ ...form, documentId }));
+const issuer = form.map(form => form.issuer, (form, issuer) => ({ ...form, issuer }));
 
 const signDocumentModal = (selectedDocuemnt: Binding<UserDocument | undefined>, show: Binding<boolean>) => {
     const saveBtn = btn('Підписати', () => {
 
-        signUserDocument(form.value.documentId, form.value.keyId, form.value.keyPwd).subscribe((result) => {
+        signUserDocument(form.value.documentId, form.value.keyId, form.value.keyPwd, form.value.issuer).subscribe((result) => {
             console.log(result);
             show.value = false;
         });
@@ -82,6 +112,9 @@ const signDocumentModal = (selectedDocuemnt: Binding<UserDocument | undefined>, 
     const userKeys = bind<UserKey[]>([]);
     const select = userKeys.select(keys => keys.length > 0 ? keySelect(userKeys, selectedKeyId) : 'Не знайдено ключів для підпису');
 
+    const issuers = bind<CertificateAuthority[]>([]);
+    const selectIssuer = issuers.select(keys => keys.length > 0 ? issuerSelect(issuers, issuer) : 'Завантажуються серифікати.');
+
     return component.html`
 <div class="modal">
   <div class="modal-background"></div>
@@ -97,8 +130,10 @@ const signDocumentModal = (selectedDocuemnt: Binding<UserDocument | undefined>, 
         ${keyFileInput}
         ${select}
         <div> 
-            ${control('Ім\'я видачі', 'issuer')}
-            ${control('Пароль', 'keyPwd')}
+            </br>
+            <div>
+            ${selectIssuer}
+            ${control('Пароль', 'keyPwd')}</div>
         </div>
     </section>
     <footer class="modal-card-foot">
@@ -146,6 +181,11 @@ const signDocumentModal = (selectedDocuemnt: Binding<UserDocument | undefined>, 
         getKeys().subscribe(keys => {
             userKeys.value = keys;
             selectedKeyId.value = keys[0]?.id ?? '';
+        });
+
+        issuers$.subscribe(iss => {
+            issuers.value = iss;
+            issuer.value = iss[0]?.codeEDRPOU ?? '';
         });
     });
 }

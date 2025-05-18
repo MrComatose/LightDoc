@@ -166,14 +166,14 @@ export const uploadDocument = (file: File): Observable<string> => {
 };
 
 
-const signDocumentRequest = (token: string, docId: string, keyId: string, password: string): Promise<any> => {
+const signDocumentRequest = (token: string, docId: string, keyId: string, password: string, issuer: string): Promise<any> => {
     return fetch(`${apiUrl}/${docId}/sign`, {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ keyId, password }),
+        body: JSON.stringify({ keyId, password, issuer }),
     }).then(response => {
         if (!response.ok) {
             throw new Error(`Failed to sign document: ${response.statusText}`);
@@ -182,7 +182,7 @@ const signDocumentRequest = (token: string, docId: string, keyId: string, passwo
     });
 };
 
-export const signUserDocument = (docId: string, keyId: string, password: string): Observable<string> => {
+export const signUserDocument = (docId: string, keyId: string, password: string, issuer: string): Observable<string> => {
     return user$.pipe(
         take(1),
         switchMap(user => {
@@ -192,7 +192,7 @@ export const signUserDocument = (docId: string, keyId: string, password: string)
                 throw new Error("No ID token available");
             }
 
-            return from(signDocumentRequest(token.getJwtToken(), docId, keyId, password));
+            return from(signDocumentRequest(token.getJwtToken(), docId, keyId, password, issuer));
         })
     );
 };

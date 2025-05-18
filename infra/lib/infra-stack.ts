@@ -7,7 +7,9 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
-import { Construct } from 'constructs';
+import { Construct } from 'constructs'; import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
+import * as route53 from 'aws-cdk-lib/aws-route53'; import * as route53Targets from 'aws-cdk-lib/aws-route53-targets';
+
 
 export class InfraStack extends cdk.Stack {
   private projectName = 'LightDoc';
@@ -63,7 +65,9 @@ export class InfraStack extends cdk.Stack {
       environment: {
         ["tableName"]: table.tableName,
         ["bucketName"]: filesBucket.bucketName
-      }
+      },
+      timeout: cdk.Duration.seconds(180),
+      memorySize: 3008
     });
 
     table.grantReadWriteData(backendLambda);
@@ -90,8 +94,21 @@ export class InfraStack extends cdk.Stack {
         authorizer: authorizer,
       }
     });
+
+    const hostedZone = route53.HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
+      hostedZoneId: 'Z0614627QI9TP7IG8TYW',
+      zoneName: 'parovenko.net',
+    });
+    const certificate = new certificatemanager.DnsValidatedCertificate(this, 'Certificate', {
+      domainName: 'lightdoc.parovenko.net',
+      hostedZone,
+      region: 'us-east-1',
+    });
+
     // Step 3: Set up CloudFront distribution
     const cloudFrontDistribution = new cloudfront.Distribution(this, 'CloudFrontDistribution', {
+      domainNames: ['lightdoc.parovenko.net'],
+      certificate,
       defaultBehavior: {
         origin: s3Origin,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
@@ -117,22 +134,11 @@ export class InfraStack extends cdk.Stack {
       ],
     });
 
-
-    // DNS Setup
-    // const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
-    //   domainName: 'lightdoc.cloud',
-    // });
-
-    // const certificate = new certificatemanager.Certificate(this, 'Certificate', {
-    //   domainName: 'lightdoc.cloud',
-    //   validation: certificatemanager.CertificateValidation.fromDns(hostedZone),
-    // });
-
-    // new route53.ARecord(this, 'CloudFrontAliasRecord', {
-    //   zone: hostedZone,
-    //   recordName: 'lightdoc',
-    //   target: route53.RecordTarget.fromAlias(new route53Targets.CloudFrontTarget(cloudFrontDistribution)),
-    // });
+    new route53.ARecord(this, 'CloudFrontAliasRecord', {
+      zone: hostedZone,
+      recordName: 'lightdoc',
+      target: route53.RecordTarget.fromAlias(new route53Targets.CloudFrontTarget(cloudFrontDistribution)),
+    });
 
     // Deploy files from ../dist/frontend to the S3 bucket
     new s3deploy.BucketDeployment(this, 'DeployFrontend', {

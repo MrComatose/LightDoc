@@ -29,7 +29,7 @@ const query = (
         chunks.push(chunk);
       });
       res.on('end', () => {
-        console.log('Response:', toUrl, res.statusCode);
+        // console.log('Response:', toUrl, res.statusCode);
         cb(Buffer.concat(chunks), res.statusCode ?? 0);
       });
     }
