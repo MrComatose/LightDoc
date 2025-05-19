@@ -1,13 +1,13 @@
 import express, { Request, Response } from "express";
 import awsServerlessExpress from "aws-serverless-express";
 import { APIGatewayEvent, Context } from "aws-lambda";
-import { createDocument } from "./use-cases/save-document";
+import { createDocument } from "./use-cases/create-document";
 import jwt from "jsonwebtoken";
 import { getDocuments } from "./use-cases/get-documents";
 import cors from "cors";  // Import cors
 import { getDocumentById } from "./use-cases/get-document-by-id";
 import { deleteFile } from "./use-cases/delete-file";
-import { createKey } from "./use-cases/save-key";
+import { createKey } from "./use-cases/create-key";
 import { getKeys } from "./use-cases/get-keys";
 import { getKeyById } from "./use-cases/get-key-by-id";
 import { signDocument } from "./use-cases/sign-document";
