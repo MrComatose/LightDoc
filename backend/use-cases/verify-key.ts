@@ -20,7 +20,7 @@ export const verifyKey = async (user: string, keyId: string, issuer: Certificate
             "#issuer": "issuer"
         },
         ExpressionAttributeValues: {
-            ":status": { S: "Verified" },
+            ":verified": { S: "Verified" },
             ":issuer": { S: JSON.stringify(issuer) }
         }
     };
