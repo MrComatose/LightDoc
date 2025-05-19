@@ -10,15 +10,15 @@ import { redirect, RouteConfig, routeOutlet, router } from "../router";
 import { documentsPanel, signDocument } from "../sections";
 import './documents.scss';
 
-const loading = bind<boolean>(true);
-const loader = observe(loading.asObservable().pipe(map(x => x ? progressBar : "")));
+const documentsLoading = bind<boolean>(true);
+const loader = observe(documentsLoading.asObservable().pipe(map(x => x ? progressBar : "")));
 
 const documents = bind<UserDocument[]>([], "Documents");
 
 const loadAlldocs = () => {
-    loading.value = true;
+    documentsLoading.value = true;
     getDocuments().pipe(finalize(() => {
-        loading.value = false;
+        documentsLoading.value = false;
     })).subscribe(x => documents.value = x);
 }
 
@@ -58,10 +58,10 @@ const documentsRouter = routeOutlet(routes);
 const deleteButton = btn(`Видалити`, () => {
     if (selectedDocumentId.value) {
         const id = selectedDocumentId.value;
-        loading.value = true;
+        documentsLoading.value = true;
 
         deleteDocument(id).pipe(finalize(() => {
-            loading.value = false;
+            documentsLoading.value = false;
         })).subscribe(() => {
 
             documents.value = documents.value.filter(d => d.id !== id);
@@ -111,11 +111,11 @@ export const documentsPage = documentsLayout(
             return;
         }
 
-        loading.value = true;
+        documentsLoading.value = true;
         uploadDocument(file.value)
             .pipe(
                 finalize(() => {
-                    loading.value = false;
+                    documentsLoading.value = false;
                 }),
                 switchMap(fileId => getDocumentById(fileId))
             )

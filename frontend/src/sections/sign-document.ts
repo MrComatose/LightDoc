@@ -1,8 +1,8 @@
-import { combineLatest, map, shareReplay, switchMap, takeUntil } from "rxjs";
+import { finalize, map, shareReplay, switchMap, takeUntil } from "rxjs";
 import { ALLOWED_DSTU_KEY_EXTENSIONS, CertificateAuthority, UserDocument, UserKey } from "../../../shared/models";
-import { btn, fileInput, formControl } from "../components";
+import { btn, fileInput, formControl, progressBar } from "../components";
 import { bind, Binding, component, effect, foreEach, observe, ReactiveBinding } from "../core";
-import { deleteKey, getKeyById, getKeys, uploadKey, signUserDocument } from "../services";
+import { getKeyById, getKeys, signUserDocument, uploadKey } from "../services";
 import { getIssuers } from "../services/issuers.service";
 
 
@@ -89,12 +89,20 @@ const formDocId = form.map(form => form.documentId, (form, documentId) => ({ ...
 const issuer = form.map(form => form.issuer, (form, issuer) => ({ ...form, issuer }));
 
 const signDocumentModal = (selectedDocuemnt: Binding<UserDocument | undefined>, show: Binding<boolean>) => {
-    const saveBtn = btn('Підписати', () => {
+    const loading = bind<Boolean>(false);
 
-        signUserDocument(form.value.documentId, form.value.keyId, form.value.keyPwd, form.value.issuer).subscribe((result) => {
-            console.log(result);
-            show.value = false;
-        });
+    const loader = observe(loading.asObservable().pipe(map(x => x ? progressBar : "")));
+    const saveBtn = btn('Підписати', () => {
+        loading.value = true;
+
+        signUserDocument(form.value.documentId, form.value.keyId, form.value.keyPwd, form.value.issuer)
+            .pipe(finalize(() => {
+                loading.value = false;
+            }))
+            .subscribe((result) => {
+                console.log(result);
+                show.value = false;
+            });
     }, {
         type: 'is-success'
     });
@@ -123,6 +131,7 @@ const signDocumentModal = (selectedDocuemnt: Binding<UserDocument | undefined>, 
       <p class="modal-card-title">Підпис документа</p>
       ${closeIcon}
     </header>
+    ${loader}
     <section class="modal-card-body">
         <div class="notification is-info">
             <p>Будь ласка, завантажте або оберіть ключ для підпису.</p>
