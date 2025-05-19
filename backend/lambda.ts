@@ -1,13 +1,13 @@
 import express, { Request, Response } from "express";
 import awsServerlessExpress from "aws-serverless-express";
 import { APIGatewayEvent, Context } from "aws-lambda";
-import { saveDocument } from "./use-cases/save-document";
+import { createDocument } from "./use-cases/save-document";
 import jwt from "jsonwebtoken";
 import { getDocuments } from "./use-cases/get-documents";
 import cors from "cors";  // Import cors
 import { getDocumentById } from "./use-cases/get-document-by-id";
 import { deleteFile } from "./use-cases/delete-file";
-import { saveKey } from "./use-cases/save-key";
+import { createKey } from "./use-cases/save-key";
 import { getKeys } from "./use-cases/get-keys";
 import { getKeyById } from "./use-cases/get-key-by-id";
 import { signDocument } from "./use-cases/sign-document";
@@ -130,7 +130,7 @@ app.post("/api/documents", async (req: Request, res: Response): Promise<any> => 
             return res.status(400).json({ error: "Filename is required" });
         }
 
-        const result = await saveDocument(filename, decoded.sub, decoded.email);
+        const result = await createDocument(filename, decoded.sub, decoded.email);
         return res.json(result);
     } catch (error) {
         console.error("Error saving document:", error);
@@ -264,7 +264,7 @@ app.post("/api/keys", async (req: Request, res: Response): Promise<any> => {
             return res.status(400).json({ error: "Filename is required" });
         }
 
-        const result = await saveKey(filename, decoded.sub, decoded.email);
+        const result = await createKey(filename, decoded.sub, decoded.email);
         return res.json(result);
     } catch (error) {
         console.error("Error saving key:", error);

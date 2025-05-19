@@ -3,18 +3,18 @@ import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import { uuidv7 } from "uuidv7";
 import { getConfig } from "../config";
-import { ALLOWED_DSTU_KEY_EXTENSIONS, CreateDocumentResponse, isValidDstuKeyExtension } from "../../shared/models";
+import { ALLOWED_DOC_EXTENSIONS, CreateDocumentResponse, isValidDocExtension } from "../../shared/models";
 
 const s3 = new S3Client({});
 const dynamoDb = new DynamoDBClient({});
 
-export const saveKey = async (filename: string, user: string, email?: string): Promise<CreateDocumentResponse> => {
-    if (!isValidDstuKeyExtension(filename)) {
-        throw new Error(`Invalid file extension. Allowed extensions: ${ALLOWED_DSTU_KEY_EXTENSIONS.join(", ")}`);
+export const createDocument = async (filename: string, user: string, email?: string): Promise<CreateDocumentResponse> => {
+    if (!isValidDocExtension(filename)) {
+        throw new Error(`Invalid file extension. Allowed extensions: ${ALLOWED_DOC_EXTENSIONS.join(", ")}`);
     }
 
     const { TABLE_NAME, BUCKET_NAME } = getConfig();
-    const id = `key-${uuidv7()}`;
+    const id = `document-${uuidv7()}`;
     const s3Key = `uploads/${user}/${id}/${filename}`;
     const createdAt = new Date().toISOString();
 
@@ -24,7 +24,6 @@ export const saveKey = async (filename: string, user: string, email?: string): P
         Expires: 3600,
     });
 
-    // Craetes key without check if its valid
     const putItemParams = {
         TableName: TABLE_NAME,
         Item: {
@@ -34,7 +33,9 @@ export const saveKey = async (filename: string, user: string, email?: string): P
             name: { S: filename },
             date: { S: createdAt },
             s3Path: { S: s3Key },
-            status: { S: "NotVerified" },
+            status: { S: "NotSigned" },
+            hash: { S: "" },
+            sign: { S: "" }
         }
     };
 

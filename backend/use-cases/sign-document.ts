@@ -1,18 +1,20 @@
 
 import { Readable } from 'stream';
 
-import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, QueryCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getConfig } from '../config';
 import * as http from "./legacy/http";
 import { CertificateAuthority } from '../../shared/models';
+import { verifyKey } from './verify-key';
 const gost89 = require("gost89");
 const jk = require("jkurwa");
 
+const CA = require("./CA.json");
 const s3 = new S3Client({});
 const dynamoDb = new DynamoDBClient({});
 
-export const fetchFileById = async (id: string, user: string): Promise<Buffer> => {
+export const fetchFileById = async (id: string, user: string): Promise<{ name: string, body: Buffer }> => {
     const { TABLE_NAME, BUCKET_NAME } = getConfig();
 
     const queryParams = {
@@ -58,17 +60,38 @@ export const fetchFileById = async (id: string, user: string): Promise<Buffer> =
         chunks.push(chunk);
     }
 
-    return Buffer.concat(chunks);
+    return { name: Item.name.S ?? '', body: Buffer.concat(chunks) };
 };
 
 const openKey = (buf: Buffer, password: string) => {
     return jk.models.Priv.from_protected(buf, password, gost89.compat.algos());
 }
 
+export const saveSignedDocument = async (user: string, id: string, s3SignedPath: string) => {
+    const { TABLE_NAME } = getConfig();
+
+    const updateParams = {
+        TableName: TABLE_NAME,
+        Key: {
+            user: { S: user },
+            id: { S: id }
+        },
+        UpdateExpression: "SET #status = :signed, #s3SignedPath = :path",
+        ExpressionAttributeNames: {
+            "#status": "status",
+            "#s3SignedPath": "s3SignedPath"
+        },
+        ExpressionAttributeValues: {
+            ":signed": { S: "Signed" },
+            ":path": { S: s3SignedPath }
+        }
+    };
+
+    await dynamoDb.send(new UpdateItemCommand(updateParams));
+};
+
 export const signDocument = async (docId: string, keyId: string, user: string, keyPassword: string, issuer: string) => {
     const algos = gost89.compat.algos;
-    const Certificate = jk.models.Certificate;
-    const Priv = jk.models.Priv;
     const Box = jk.Box;
 
     const docFileTask = fetchFileById(docId, user);
@@ -77,13 +100,8 @@ export const signDocument = async (docId: string, keyId: string, user: string, k
     const [keyFile, docFile] = await Promise.all([keyFileTask, docFileTask]);
 
     const box = new Box({ algo: algos(), query: http.query });
-    box.load({ keyBuffers: [keyFile], password: keyPassword });
+    box.load({ keyBuffers: [keyFile.body], password: keyPassword });
 
-
-    // download https://iit.com.ua/download/productfiles/CAs.json
-    // download https://iit.com.ua/download/productfiles/CACertificates.p7b
-
-    const CA = require("./CA.json");
     var certAuth = CA.find(x => x.codeEDRPOU === issuer) as CertificateAuthority | null;
 
     if (!certAuth) {
@@ -97,29 +115,27 @@ export const signDocument = async (docId: string, keyId: string, user: string, k
     const ipn_ext = box.keys[0].cert.extension.ipn;
     const subject = box.keys[0].cert.subject;
 
-    console.log("Signing document", docId, "with key", keyId, "for user", user);
+    await verifyKey(user, keyId, certAuth);
 
-    const signedData = await box.sign(docFile, null, null, {
+    const signedData = await box.sign(docFile.body, null, null, {
         tax: true,
         tsp: "content",
         time: Date.now()
     });
 
-    console.log("Document signed successfully");
-    console.log("Uploading signed document to S3");
-    // Upload signed file back to S3
-    const signedFilePath = `signed/${user}/${docId}.pdf.p7`;
+    const signedFilePath = `signed/${docFile.name}`;
     await s3.send(new PutObjectCommand({
         Bucket: getConfig().BUCKET_NAME,
         Key: signedFilePath,
         Body: signedData.as_asn1(),
     }));
-    console.log("Document uploaded to S3");
 
     if (box && box.sock) {
         box.sock.destroy();
+
     }
 
-    return { ipn_ext, subject };
+    await saveSignedDocument(user, docId, signedFilePath);
 
+    return { docId, ipn_ext, subject };
 }
