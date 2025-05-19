@@ -4,6 +4,7 @@ import { btn, fileInput, formControl, progressBar } from "../components";
 import { bind, Binding, component, effect, foreEach, observe, ReactiveBinding } from "../core";
 import { getKeyById, getKeys, signUserDocument, uploadKey } from "../services";
 import { getIssuers } from "../services/issuers.service";
+import { updateDoc } from "../pages";
 
 
 const defaultFormValue = {
@@ -99,9 +100,10 @@ const signDocumentModal = (selectedDocuemnt: Binding<UserDocument | undefined>, 
             .pipe(finalize(() => {
                 loading.value = false;
             }))
-            .subscribe((result) => {
-                console.log(result);
+            .subscribe(() => {
                 show.value = false;
+
+                updateDoc(form.value.documentId).subscribe();
             });
     }, {
         type: 'is-success'

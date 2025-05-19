@@ -1,4 +1,4 @@
-import { distinctUntilChanged, finalize, map, startWith, switchMap } from "rxjs/operators";
+import { distinctUntilChanged, finalize, map, startWith, switchMap, tap } from "rxjs/operators";
 import { btn, progressBar } from "../components";
 import { bind, component, effect, observe } from "../core";
 import { deleteDocument, getDocumentById, getDocuments, isAuthenticated, uploadDocument } from "../services"; // Assuming you have a service for getting documents
@@ -137,3 +137,20 @@ export const documentsPage = documentsLayout(
 
     loadAlldocs();
 });
+
+export const updateDoc = (docId: string) => {
+    documentsLoading.value = true;
+
+    return getDocumentById(docId)
+        .pipe(
+            tap(newDoc => {
+                var newDocs = [...documents.value];
+                var index = documents.value.findIndex(x => x.id === docId);
+                newDocs[index] = newDoc;
+
+                documents.value = newDocs
+            }),
+            finalize(() => {
+                documentsLoading.value = false;
+            }));
+}
