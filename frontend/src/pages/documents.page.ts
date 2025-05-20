@@ -34,7 +34,7 @@ const routes: RouteConfig[] = [
         view: ({ id }) =>
             documents.select(docs => docs.find(x => x.id === id))
                 .mapTo(doc => component.html`
-    <iframe src="https://viewerjs.org/ViewerJS/?presentation=true&zoom=1.5#${doc?.signedFileUrl ?? doc?.presignedUrl ?? ""}" width="100%" height="600px"></iframe>
+    <iframe src="https://viewerjs.org/ViewerJS/?presentation=true&zoom=1.5#${doc?.signedFileUrl || doc?.presignedUrl || ""}" width="100%" height="600px"></iframe>
     `.afterViewInit(() => {
                     selectedDocument.value = doc;
 
