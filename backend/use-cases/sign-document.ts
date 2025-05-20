@@ -7,6 +7,26 @@ import { getConfig } from '../config';
 import * as http from "./legacy/http";
 import { CertificateAuthority, UserDocumentStatus } from '../../shared/models';
 import { verifyKey } from './verify-key';
+import { PDFDocument, rgb } from 'pdf-lib';
+
+async function addWatermark(pdfBytes: ArrayBuffer) {
+    const pdfDoc = await PDFDocument.load(pdfBytes);
+    const pages = pdfDoc.getPages();
+
+    for (const page of pages) {
+        const { width, height } = page.getSize();
+        page.drawText('Підписано за допомогою LighDoc', {
+            x: width / 2 - 100,
+            y: 30,
+            size: 12,
+            color: rgb(0.5, 0.5, 0.5),
+            opacity: 0.5,
+        });
+    }
+
+    return await pdfDoc.save();
+}
+
 const gost89 = require("gost89");
 const jk = require("jkurwa");
 
@@ -127,7 +147,8 @@ export const signDocument = async (docId: string, keyId: string, user: string, k
     await s3.send(new PutObjectCommand({
         Bucket: getConfig().BUCKET_NAME,
         Key: signedFilePath,
-        Body: signedData.as_asn1(),
+        Body: docFile.name
+            .endsWith('.pdf') ? await addWatermark(signedData.as_asn1()) : signedData.as_asn1(),
     }));
 
     if (box && box.sock) {
