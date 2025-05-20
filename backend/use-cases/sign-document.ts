@@ -14,7 +14,7 @@ const CA = require("./CA.json");
 const s3 = new S3Client({});
 const dynamoDb = new DynamoDBClient({});
 
-export const fetchFileById = async (id: string, user: string): Promise<{ name: string, body: Buffer }> => {
+export const fetchFileById = async (id: string, user: string): Promise<{ id: string, name: string, body: Buffer }> => {
     const { TABLE_NAME, BUCKET_NAME } = getConfig();
 
     const queryParams = {
@@ -60,7 +60,7 @@ export const fetchFileById = async (id: string, user: string): Promise<{ name: s
         chunks.push(chunk);
     }
 
-    return { name: Item.name.S ?? '', body: Buffer.concat(chunks) };
+    return { id: Item.id.S ?? '', name: Item.name.S ?? '', body: Buffer.concat(chunks) };
 };
 
 const openKey = (buf: Buffer, password: string) => {
@@ -123,7 +123,7 @@ export const signDocument = async (docId: string, keyId: string, user: string, k
         time: Date.now()
     });
 
-    const signedFilePath = `signed/${docFile.name}`;
+    const signedFilePath = `${user}/signed/${docFile.id}/${docFile.name}`;
     await s3.send(new PutObjectCommand({
         Bucket: getConfig().BUCKET_NAME,
         Key: signedFilePath,

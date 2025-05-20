@@ -15,7 +15,7 @@ export const createDocument = async (filename: string, user: string, email?: str
 
     const { TABLE_NAME, BUCKET_NAME } = getConfig();
     const id = `document-${uuidv7()}`;
-    const s3Key = `uploads/${user}/${id}/${filename}`;
+    const s3Key = `${user}/uploads/${id}/${filename}`;
     const createdAt = new Date().toISOString();
 
     const { url, fields } = await createPresignedPost(s3, {
