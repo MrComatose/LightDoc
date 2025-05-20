@@ -19,7 +19,7 @@ async function addWatermark(pdfBytes: ArrayBuffer) {
             x: width / 2 - 100,
             y: 30,
             size: 12,
-            color: rgb(79, 201, 250),
+            color: rgb(0.79, 1, 0.20),
             opacity: 0.5,
         });
     }
