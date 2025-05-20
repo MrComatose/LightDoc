@@ -1,5 +1,5 @@
 import { finalize, map, shareReplay, switchMap, takeUntil } from "rxjs";
-import { ALLOWED_DSTU_KEY_EXTENSIONS, CertificateAuthority, UserDocument, UserKey } from "../../../shared/models";
+import { ALLOWED_DSTU_KEY_EXTENSIONS, CertificateAuthority, UserDocument, UserDocumentStatus, UserKey } from "../../../shared/models";
 import { btn, fileInput, formControl, progressBar } from "../components";
 import { bind, Binding, component, effect, foreEach, observe, ReactiveBinding } from "../core";
 import { getKeyById, getKeys, signUserDocument, uploadKey } from "../services";
@@ -213,4 +213,30 @@ const signDocBtn = (disabled: ReactiveBinding<boolean>) => btn('Підписат
     disabled
 });
 
-export const signDocument = (doc: Binding<UserDocument | undefined>) => component.html`${modal(doc)}${signDocBtn(doc.select(x => !x))}`;
+
+const downloadSignedDocBtn = (doc: Binding<UserDocument | undefined>) => btn('Завантажити підписаний документ', async () => {
+    const url = doc.value?.signedFileUrl;
+    if (!url) return;
+
+    const response = await fetch(url);
+    if (!response.ok) return;
+
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = doc.value!.name;
+    a.click();
+    URL.revokeObjectURL(objectUrl);
+}, {
+    type: 'is-primary'
+});
+
+
+export const signDocument = (doc: Binding<UserDocument | undefined>) => {
+    var signComponent = component.html`${modal(doc)}${signDocBtn(doc.select(x => !x))}`;
+    var downloadSigned = downloadSignedDocBtn(doc);
+
+    return doc.select(doc => doc?.status === UserDocumentStatus.Signed ? downloadSigned : signComponent);
+} 
