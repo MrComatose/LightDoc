@@ -43,7 +43,7 @@ export const panelItem = (
 
 const search = (binding: Binding<string>) => component.html`
 <p class="control has-icons-left">
-    <input class="input is-success" type="text" placeholder="Search" />
+    <input id="search" class="input is-success" type="text" placeholder="Search" />
     <span class="icon is-left">
         <i class="fas fa-search" aria-hidden="true"></i>
     </span>

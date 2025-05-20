@@ -15,11 +15,11 @@ async function addWatermark(pdfBytes: ArrayBuffer) {
 
     for (const page of pages) {
         const { width, height } = page.getSize();
-        page.drawText('Підписано за допомогою LighDoc', {
+        page.drawText('Signed with LighDoc', {
             x: width / 2 - 100,
             y: 30,
             size: 12,
-            color: rgb(0.5, 0.5, 0.5),
+            color: rgb(79, 201, 250),
             opacity: 0.5,
         });
     }
