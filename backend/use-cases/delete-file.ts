@@ -31,6 +31,16 @@ export const deleteFile = async (user: string, id: string): Promise<void> => {
 
     await s3.send(new DeleteObjectCommand(deleteS3Params));
 
+    const signedS3Key = document.Item.s3SignedPath.S;
+    if (signedS3Key) {
+        const deleteSignedS3Params = {
+            Bucket: BUCKET_NAME,
+            Key: signedS3Key
+        };
+
+        await s3.send(new DeleteObjectCommand(deleteSignedS3Params));
+    }
+
     const deleteDynamoParams = {
         TableName: TABLE_NAME,
         Key: {
