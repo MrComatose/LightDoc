@@ -3,7 +3,7 @@ import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getConfig } from "../config";
-import { UserDocument } from "../../shared/models";
+import { UserDocument, UserDocumentStatus } from "../../shared/models";
 
 const s3 = new S3Client({});
 const dynamoDb = new DynamoDBClient({});
@@ -46,12 +46,20 @@ export const getDocumentById = async (user: string, id: string): Promise<UserDoc
 
     const presignedUrl = await getSignedUrl(s3, downloadCommand, { expiresIn: 3600 * 10 });
 
+    var status = document.status.S as UserDocumentStatus;
+
+    let signedFileUrl = status === UserDocumentStatus.Signed ? await getSignedUrl(s3, new GetObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: document.s3SignedPath.S
+    }), { expiresIn: 3600 * 10 }) : '';
+
     return {
         id: document.id.S ?? "",
         date: document.date.S ?? "",
         email: document.email.S ?? "",
         name: document.name.S ?? "",
-        status: document.status.S ?? "",
-        presignedUrl
+        status,
+        presignedUrl,
+        signedFileUrl
     };
 };

@@ -1,19 +1,30 @@
+export enum UserDocumentStatus {
+    Signed = 'Signed',
+    NonSigned = 'NonSigned',
+}
+
 export interface UserDocument {
     id: string;
-    status: string;
+    status: UserDocumentStatus;
     date: string;
     email: string;
     name: string;
     presignedUrl: string;
+    signedFileUrl?: string;
+}
+export enum UserKeyStatus {
+    Verified = 'Verified',
+    NonVerified = 'NonVerified',
 }
 
 export interface UserKey {
     id: string;
-    status: string;
+    status: UserKeyStatus;
     date: string;
     email: string;
     name: string;
     presignedUrl: string;
+    issuer?: CertificateAuthority;
 }
 
 export interface PresignedUrl {

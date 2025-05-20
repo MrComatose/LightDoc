@@ -3,7 +3,7 @@ import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import { uuidv7 } from "uuidv7";
 import { getConfig } from "../config";
-import { ALLOWED_DSTU_KEY_EXTENSIONS, CreateDocumentResponse, isValidDstuKeyExtension } from "../../shared/models";
+import { ALLOWED_DSTU_KEY_EXTENSIONS, CreateDocumentResponse, isValidDstuKeyExtension, UserKeyStatus } from "../../shared/models";
 
 const s3 = new S3Client({});
 const dynamoDb = new DynamoDBClient({});
@@ -34,7 +34,7 @@ export const createKey = async (filename: string, user: string, email?: string):
             name: { S: filename },
             date: { S: createdAt },
             s3Path: { S: s3Key },
-            status: { S: "NotVerified" },
+            status: { S: UserKeyStatus.NonVerified },
         }
     };
 

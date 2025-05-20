@@ -3,7 +3,7 @@ import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import { uuidv7 } from "uuidv7";
 import { getConfig } from "../config";
-import { ALLOWED_DOC_EXTENSIONS, CreateDocumentResponse, isValidDocExtension } from "../../shared/models";
+import { ALLOWED_DOC_EXTENSIONS, CreateDocumentResponse, isValidDocExtension, UserDocumentStatus } from "../../shared/models";
 
 const s3 = new S3Client({});
 const dynamoDb = new DynamoDBClient({});
@@ -33,7 +33,7 @@ export const createDocument = async (filename: string, user: string, email?: str
             name: { S: filename },
             date: { S: createdAt },
             s3Path: { S: s3Key },
-            status: { S: "NotSigned" },
+            status: { S: UserDocumentStatus.NonSigned },
             hash: { S: "" },
             sign: { S: "" }
         }

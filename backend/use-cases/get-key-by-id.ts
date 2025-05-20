@@ -1,14 +1,13 @@
-import { S3Client } from "@aws-sdk/client-s3";
 import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { UserKey, UserKeyStatus } from "../../shared/models";
 import { getConfig } from "../config";
-import { UserDocument } from "../../shared/models";
 
 const s3 = new S3Client({});
 const dynamoDb = new DynamoDBClient({});
 
-export const getKeyById = async (user: string, id: string): Promise<UserDocument> => {
+export const getKeyById = async (user: string, id: string): Promise<UserKey> => {
     const { TABLE_NAME, BUCKET_NAME } = getConfig();
 
     if (!id.startsWith("key-")) {
@@ -45,13 +44,18 @@ export const getKeyById = async (user: string, id: string): Promise<UserDocument
     });
 
     const presignedUrl = await getSignedUrl(s3, downloadCommand, { expiresIn: 3600 * 10 });
+    var status = document.status.S as UserKeyStatus;
+
+    var issuerStr = document.issuer.S;
+    var issuer = issuerStr && JSON.parse(issuerStr);
 
     return {
         id: document.id.S ?? "",
         date: document.date.S ?? "",
         email: document.email.S ?? "",
         name: document.name.S ?? "",
-        status: document.status.S ?? "",
+        status,
+        issuer,
         presignedUrl
     };
 };

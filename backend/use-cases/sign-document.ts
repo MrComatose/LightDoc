@@ -5,7 +5,7 @@ import { DynamoDBClient, QueryCommand, UpdateItemCommand } from "@aws-sdk/client
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getConfig } from '../config';
 import * as http from "./legacy/http";
-import { CertificateAuthority } from '../../shared/models';
+import { CertificateAuthority, UserDocumentStatus } from '../../shared/models';
 import { verifyKey } from './verify-key';
 const gost89 = require("gost89");
 const jk = require("jkurwa");
@@ -82,7 +82,7 @@ export const saveSignedDocument = async (user: string, id: string, s3SignedPath:
             "#s3SignedPath": "s3SignedPath"
         },
         ExpressionAttributeValues: {
-            ":signed": { S: "Signed" },
+            ":signed": { S: UserDocumentStatus.Signed },
             ":path": { S: s3SignedPath }
         }
     };

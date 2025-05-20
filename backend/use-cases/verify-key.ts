@@ -1,7 +1,7 @@
 import { UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { getConfig } from "../config";
 import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
-import { CertificateAuthority } from "../../shared/models";
+import { CertificateAuthority, UserKeyStatus } from "../../shared/models";
 
 const dynamoDb = new DynamoDBClient({});
 
@@ -20,7 +20,7 @@ export const verifyKey = async (user: string, keyId: string, issuer: Certificate
             "#issuer": "issuer"
         },
         ExpressionAttributeValues: {
-            ":verified": { S: "Verified" },
+            ":verified": { S: UserKeyStatus.Verified },
             ":issuer": { S: JSON.stringify(issuer) }
         }
     };
