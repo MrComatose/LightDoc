@@ -12,21 +12,21 @@
 
 :root {
   --primary-bg-color: black;
-  --accent-color: #F2613F;
+  --accent-color: #80ff46;
   --primary-text-color: white;
   --font-family: "Roboto", sans-serif;
 }
 
 html[data-theme="dark"] {
   --primary-bg-color: black;
-  --accent-color: #DC5F00;
+  --accent-color: #80ff46;
   --primary-text-color: rgb(204, 204, 204);
   --muted-text-color: rgb(119, 119, 119);
 }
 
 html[data-theme="light"] {
   --primary-bg-color: #EEEEEE;
-  --accent-color: #DC5F00;
+  --accent-color: #80ff46;
   --primary-text-color: #373A40;
   --muted-text-color: #686D76;
 }

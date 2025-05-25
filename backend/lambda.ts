@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 import { getDocuments } from "./use-cases/get-documents";
 import cors from "cors";  // Import cors
 import { getDocumentById } from "./use-cases/get-document-by-id";
-import { deleteFile } from "./use-cases/delete-file";
+import { deleteDocument } from "./use-cases/delete-document";
 import { createKey } from "./use-cases/create-key";
 import { getKeys } from "./use-cases/get-keys";
 import { getKeyById } from "./use-cases/get-key-by-id";
@@ -102,7 +102,7 @@ app.delete("/api/documents/:fileId", async (req: Request, res: Response): Promis
 
         const fileId = req.params.fileId;
 
-        await deleteFile(decoded.sub, fileId);
+        await deleteDocument(decoded.sub, fileId);
 
         return res.status(204).json({});
     } catch (error) {
@@ -237,7 +237,7 @@ app.delete("/api/keys/:fileId", async (req: Request, res: Response): Promise<any
 
         const fileId = req.params.fileId;
 
-        await deleteFile(decoded.sub, fileId);
+        await deleteDocument(decoded.sub, fileId);
 
         return res.status(204).json({});
     } catch (error) {

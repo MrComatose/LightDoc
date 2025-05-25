@@ -1,11 +1,12 @@
 import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { DynamoDBClient, DeleteItemCommand, GetItemCommand } from "@aws-sdk/client-dynamodb";
 import { getConfig } from "../config";
+import { UserDocumentStatus } from "../../shared/models";
 
 const s3 = new S3Client({});
 const dynamoDb = new DynamoDBClient({});
 
-export const deleteFile = async (user: string, id: string): Promise<void> => {
+export const deleteDocument = async (user: string, id: string): Promise<void> => {
     const { TABLE_NAME, BUCKET_NAME } = getConfig();
 
     const getItemParams = {
@@ -31,8 +32,8 @@ export const deleteFile = async (user: string, id: string): Promise<void> => {
 
     await s3.send(new DeleteObjectCommand(deleteS3Params));
 
-    const signedS3Key = document.Item.s3SignedPath.S;
-    if (signedS3Key) {
+    if (document.Item.status.S === UserDocumentStatus.Signed) {
+        const signedS3Key = document.Item.s3SignedPath.S;
         const deleteSignedS3Params = {
             Bucket: BUCKET_NAME,
             Key: signedS3Key
