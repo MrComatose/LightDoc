@@ -14,6 +14,7 @@ import { signDocument } from "./use-cases/sign-document";
 import middy from "@middy/core";
 import axios from "axios";
 import doNotWaitForEmptyEventLoop from "@middy/do-not-wait-for-empty-event-loop";
+import { deleteKey } from "./use-cases/delete-key";
 
 export const app = express();
 
@@ -272,6 +273,32 @@ app.post("/api/keys", async (req: Request, res: Response): Promise<any> => {
     }
 });
 
+
+app.delete("/api/keys/:keyId", async (req: Request, res: Response): Promise<any> => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
+
+        const token = authHeader.split(" ")[1];
+
+        const decoded = jwt.decode(token) as { sub?: string };
+
+        if (!decoded || !decoded.sub) {
+            return res.status(401).json({ error: "Invalid token" });
+        }
+
+        const fileId = req.params.keyId;
+
+        await deleteKey(decoded.sub, fileId);
+
+        return res.status(204).json({});
+    } catch (error) {
+        console.error("Error deleting key:", error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
 
 
 app.get("/api/issuers", async (req: Request, res: Response): Promise<any> => {
