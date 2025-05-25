@@ -43,12 +43,12 @@ export const panelItem = (
 
 const search = (binding: Binding<string>) => component.html`
 <p class="control has-icons-left">
-    <input id="search" name="search" class="input is-success" type="text" placeholder="Search" autocomplete="off"/>
+    <input id="search-str" name="search-str" class="input is-success" type="text" placeholder="Search" autocomplete="off"/>
     <span class="icon is-left">
         <i class="fas fa-search" aria-hidden="true"></i>
     </span>
 </p>`.afterViewInit(component => {
-    const inputElement = component.getElem().querySelector('input') as HTMLInputElement;
+    const inputElement = component.getElem().querySelector('#search-str') as HTMLInputElement;
 
     binding.asObservable().pipe(
         takeUntil(component.detached$)
