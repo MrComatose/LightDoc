@@ -43,7 +43,7 @@ export const panelItem = (
 
 const search = (binding: Binding<string>) => component.html`
 <p class="control has-icons-left">
-    <input id="search" name="search" class="input is-success" type="text" placeholder="Search" />
+    <input id="search" name="search" class="input is-success" type="text" placeholder="Search" autocomplete="off"/>
     <span class="icon is-left">
         <i class="fas fa-search" aria-hidden="true"></i>
     </span>
@@ -60,9 +60,10 @@ const search = (binding: Binding<string>) => component.html`
 
 });
 
+const searchStr = bind<string>('');
+const searchComponent = search(searchStr)
 export const documentsPanel = (props: DocumentsPanelProps) => {
     const selectedStatus = bind<'All' | string>('All');
-    const searchStr = bind<string>('');
 
     const fileComponents$ = props.documents.asObservable()
         .pipe(
@@ -108,11 +109,10 @@ export const documentsPanel = (props: DocumentsPanelProps) => {
     return component.html`
         <article class="panel is-success">
             <p class="panel-heading">Завантажені документи
-            
             </p>
             ${loop(statuses, { name: 'p', class: 'panel-tabs' })}
             <div class="panel-block">
-                ${search(searchStr)}
+                ${searchComponent}
             </div>
                 ${loop(fileComponents$)}
         </article>
