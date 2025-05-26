@@ -3,8 +3,8 @@ import { Binding, component } from '../core';
 
 export const formControl = (label: string, binding: Binding<string>, opt?: { type: string }) => component.html`
 <div class="form-control">
-    <input type=${opt?.type ?? 'text'} class="form-control__input" />
-    <label class="form-control__label">${label}</label>
+    <input type=${opt?.type ?? 'text'} name="${label}" class="form-control__input" />
+    <label class="form-control__label" for="${label}">${label}</label>
 </div>
 `.afterViewInit(component => {
     const inputElement = component.getElem().querySelector('input');

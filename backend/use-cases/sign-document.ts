@@ -147,8 +147,7 @@ export const signDocument = async (docId: string, keyId: string, user: string, k
     await s3.send(new PutObjectCommand({
         Bucket: getConfig().BUCKET_NAME,
         Key: signedFilePath,
-        Body: docFile.name
-            .endsWith('.pdf') ? await addWatermark(signedData.as_asn1()) : signedData.as_asn1(),
+        Body: signedData.as_asn1(),
     }));
 
     if (box && box.sock) {
